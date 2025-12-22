@@ -1,0 +1,5 @@
+# Agent League System - Production Requirements
+# Generated from pyproject.toml
+
+# Core dependencies
+pyyaml>=6.0

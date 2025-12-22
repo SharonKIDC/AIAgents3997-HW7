@@ -1,0 +1,36 @@
+# MANIFEST.in - Package distribution manifest
+# Includes additional files not captured by setuptools
+
+# Documentation
+include README.md
+include LICENSE
+include USAGE.md
+include TEST_SUMMARY.md
+include TEST_MANIFEST.md
+
+# Configuration files
+recursive-include config *.yaml *.yml *.json
+
+# Documentation
+recursive-include docs *.md
+
+# Tests
+recursive-include tests *.py
+
+# Exclude compiled files and caches
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .DS_Store
+
+# Exclude build artifacts
+prune build
+prune dist
+prune *.egg-info
+prune .pytest_cache
+prune htmlcov
+
+# Exclude data and logs
+prune data
+prune logs

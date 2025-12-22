@@ -1,0 +1,36 @@
+{
+  "jsonrpc": "2.0",
+  "method": "league.handle",
+  "params": {
+    "envelope": {
+      "protocol": "league.v2",
+      "message_type": "MATCH_RESULT_REPORT",
+      "sender": "referee:ref_1",
+      "timestamp": "2025-01-01T12:30:00Z",
+      "conversation_id": "conv-match-001",
+      "league_id": "league-001",
+      "round_id": "round-001",
+      "match_id": "match-001",
+      "auth_token": "REDACTED_TOKEN_EXAMPLE"
+    },
+    "payload": {
+      "game_type": "even_odd",
+      "players": [
+        "player_1",
+        "player_2"
+      ],
+      "outcome": {
+        "player_1": "win",
+        "player_2": "loss"
+      },
+      "points": {
+        "player_1": 3,
+        "player_2": 0
+      },
+      "game_metadata": {
+        "note": "opaque-to-league"
+      }
+    }
+  },
+  "id": "req-match-001"
+}

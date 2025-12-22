@@ -1,0 +1,31 @@
+league:
+  league_id: "league-2025-01"
+  name: "Agent League Championship 2025"
+
+registration:
+  window_seconds: 60  # Close registration 60s after first player
+  min_players: 2
+  max_players: 100
+  min_referees: 1
+
+scheduling:
+  algorithm: "round_robin"  # Only round_robin supported in v1
+  concurrent_matches_per_round: true
+
+timeouts:
+  registration_response_ms: 5000
+  match_join_ack_ms: 10000
+  move_response_ms: 30000
+  result_report_ms: 60000
+
+retries:
+  max_attempts: 3
+  backoff_ms: 1000
+
+logging:
+  audit_log_path: "./logs/audit.jsonl"
+  application_log_path: "./logs/league_manager.log"
+  log_level: "INFO"
+
+database:
+  path: "./data/league.db"

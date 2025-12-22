@@ -1,0 +1,17 @@
+{
+  "jsonrpc": "2.0",
+  "method": "league.handle",
+  "params": {
+    "envelope": {
+      "protocol": "league.v2",
+      "message_type": "REGISTER_REFEREE_REQUEST",
+      "sender": "referee:ref_1",
+      "timestamp": "2025-01-01T12:00:00Z",
+      "conversation_id": "conv-ref-001"
+    },
+    "payload": {
+      "referee_id": "ref_1"
+    }
+  },
+  "id": "req-ref-001"
+}

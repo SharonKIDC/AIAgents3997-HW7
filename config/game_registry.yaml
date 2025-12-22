@@ -1,0 +1,9 @@
+games:
+  - game_type: "tic_tac_toe"
+    name: "Tic Tac Toe"
+    description: "Classic 3x3 grid game"
+    referee_implementation: "src.referee.games.tic_tac_toe.TicTacToeGame"
+    scoring:
+      win: 3
+      draw: 1
+      loss: 0

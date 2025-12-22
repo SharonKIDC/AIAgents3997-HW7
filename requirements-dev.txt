@@ -1,0 +1,19 @@
+# Agent League System - Development Requirements
+# Include production requirements
+-r requirements.txt
+
+# Development tools
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.7.0
+flake8>=6.1.0
+mypy>=1.5.0
+
+# Additional testing utilities
+pytest-mock>=3.10.0
+pytest-timeout>=2.1.0
+
+# Build tools
+build>=0.10.0
+setuptools>=68.0
+wheel>=0.40.0

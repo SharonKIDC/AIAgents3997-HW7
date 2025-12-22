@@ -1,0 +1,9 @@
+# Test requirements for Agent League System
+
+# Core testing framework
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Additional testing utilities
+pytest-mock>=3.10.0
+pytest-timeout>=2.1.0

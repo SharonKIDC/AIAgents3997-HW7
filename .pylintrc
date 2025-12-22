@@ -1,0 +1,32 @@
+[MASTER]
+init-hook='import sys; sys.path.append(".")'
+jobs=4
+
+[MESSAGES CONTROL]
+disable=
+    missing-docstring,
+    too-few-public-methods,
+    too-many-arguments,
+    logging-fstring-interpolation,
+    protected-access,
+    wrong-hanging-indentation,
+    bad-whitespace
+
+[REPORTS]
+output-format=colorized
+reports=no
+
+[BASIC]
+good-names=i,j,k,ex,_,id,db,op,fp,n,x,y,z,row,col
+
+[FORMAT]
+max-line-length=100
+indent-string='    '
+
+[DESIGN]
+max-args=8
+max-attributes=10
+min-public-methods=1
+
+[LOGGING]
+logging-format-style=old
