@@ -212,13 +212,13 @@ Ops/security
 - docs/SECURITY.md
 
 Process
-- docs/PROMPT_LOG.md
+- docs/development/PROMPT_LOG.md
 - docs/COSTS.md
 - docs/EXTENSIBILITY.md
-- docs/QUALITY_STANDARD.md
+- docs/development/QUALITY_STANDARD.md
 
 Final
-- docs/FINAL_CHECKLIST.md
+- docs/development/FINAL_CHECKLIST.md
 
 ---
 

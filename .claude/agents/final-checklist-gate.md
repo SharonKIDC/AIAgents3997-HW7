@@ -3,7 +3,7 @@
 - role: "Verifies required submission artifacts and documents final validation commands; blocks release when gates fail"
 - phase_applicability: ["ReleaseGate"]
 - primary_outputs:
-  - "docs/FINAL_CHECKLIST.md"
+  - "docs/development/FINAL_CHECKLIST.md"
 - gates_enforced:
   - "final_checklist_pass"
 

@@ -310,7 +310,7 @@ Typically modified artifacts:
 - **Code**: src/** (implementation changes)
 - **Tests**: tests/** (new/updated tests)
 - **Docs**: README.md, docs/USAGE.md (user-facing updates)
-- **Process**: docs/PROMPT_LOG.md (continuous dev history)
+- **Process**: docs/development/PROMPT_LOG.md (continuous dev history)
 - **Config**: .env.example, config files (if config changed)
 
 Rarely modified in continuous dev:
@@ -374,9 +374,9 @@ git-workflow(pre_phase) → phase/continuous-dev-20250624-143000
    - Expected: Quality report, potential improvements
 
 5. prompt-log-updater
-   - Purpose: Document the fix in PROMPT_LOG.md
+   - Purpose: Document the fix in docs/development/PROMPT_LOG.md
    - Branch: agent/continuous-dev/prompt-log-updater-20250624-143215
-   - Expected: Updated docs/PROMPT_LOG.md
+   - Expected: Updated docs/development/PROMPT_LOG.md
 
 git-workflow(post_phase) → merge to main, tag v-continuous-dev-20250624-143245
 ```

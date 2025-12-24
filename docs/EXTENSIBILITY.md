@@ -9,7 +9,7 @@ This document provides comprehensive guidance on extending the Agent League Syst
 - **Version**: 1.0
 - **Last Updated**: 2025-12-21
 - **Status**: Authoritative
-- **Related Documents**: [Architecture.md](Architecture.md), [BUILDING_BLOCKS.md](BUILDING_BLOCKS.md)
+- **Related Documents**: [Architecture.md](Architecture.md), [BUILDING_BLOCKS.md](development/BUILDING_BLOCKS.md)
 
 ---
 

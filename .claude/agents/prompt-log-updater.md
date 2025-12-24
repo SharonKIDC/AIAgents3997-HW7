@@ -3,7 +3,7 @@
 - role: "Appends prompt usage and lessons learned to the prompt log"
 - phase_applicability: ["TaskLoop", "ResearchLoop", "ReleaseGate"]
 - primary_outputs:
-  - "docs/PROMPT_LOG.md"
+  - "docs/development/PROMPT_LOG.md"
 - gates_enforced:
   - "prompt_log_updated"
 

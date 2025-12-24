@@ -3,7 +3,7 @@
 - role: "Maps the project to ISO/IEC 25010 quality attributes with evidence"
 - phase_applicability: ["ReleaseGate"]
 - primary_outputs:
-  - "docs/QUALITY_STANDARD.md"
+  - "docs/development/QUALITY_STANDARD.md"
 - gates_enforced:
   - "iso25010_mapping_present"
 

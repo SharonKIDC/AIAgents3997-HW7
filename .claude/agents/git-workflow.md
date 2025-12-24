@@ -4,7 +4,7 @@
 - phase_applicability: ["PreProject", "TaskLoop", "ResearchLoop", "ReleaseGate"]
 - invocation_mode: "pre_post_hooks"
 - primary_outputs:
-  - "docs/GIT_WORKFLOW.md" (documentation)
+  - "docs/development/GIT_WORKFLOW.md" (documentation)
   - Git branches, commits, and merge history (actual workflow execution)
 - gates_enforced:
   - "minimum_commits_target" (15+ commits for project completion)
@@ -55,7 +55,7 @@ The orchestrator MUST invoke git-workflow at:
 ### Pre-Phase (once per phase)
 1. Verify main branch is clean
 2. Create phase branch: `phase/{phase-name}-{timestamp}`
-3. Document workflow strategy in docs/GIT_WORKFLOW.md if first time
+3. Document workflow strategy in docs/development/GIT_WORKFLOW.md if first time
 4. Set commit target for phase (minimum commits expected)
 
 ### Pre-Agent (before each agent executes)
@@ -148,7 +148,7 @@ Track execution progress:
 ## Changes Produced
 
 ### Documentation (PreProject first invocation)
-Create/update docs/GIT_WORKFLOW.md with:
+Create/update docs/development/GIT_WORKFLOW.md with:
 - Branching strategy documentation
 - Commit conventions
 - PR checklist template

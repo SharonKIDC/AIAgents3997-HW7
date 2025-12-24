@@ -3,7 +3,7 @@
 - role: "Creates the prompt engineering log template"
 - phase_applicability: ["PreProject"]
 - primary_outputs:
-  - "docs/PROMPT_LOG.md"
+  - "docs/development/PROMPT_LOG.md"
 - gates_enforced:
   - "prompt_log_updated"
 
@@ -18,7 +18,7 @@
 - constraints:
 
 ## Work performed
-- Create docs/PROMPT_LOG.md with an entry template.
+- Create docs/development/PROMPT_LOG.md with an entry template.
 
 ## Changes
 - Provide diffs.

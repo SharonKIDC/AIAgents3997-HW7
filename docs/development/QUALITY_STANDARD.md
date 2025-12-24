@@ -319,7 +319,7 @@ ISO 9126 defines six quality characteristics for software products. This section
 - Common modules independent of agents
 - Game-agnostic league logic
 - YAML configuration
-- See: `docs/BUILDING_BLOCKS.md`, `docs/EXTENSIBILITY.md`
+- See: `docs/development/BUILDING_BLOCKS.md`, `docs/EXTENSIBILITY.md`
 
 #### 1.5.3 Stability
 
@@ -621,7 +621,7 @@ See: `tests/` directory, `TEST_SUMMARY.md`
 - ✅ ADRs (Architecture Decision Records)
 - ✅ Code comments and docstrings
 
-**Evidence**: `docs/Architecture.md`, `docs/BUILDING_BLOCKS.md`, `docs/EXTENSIBILITY.md`, `docs/ADRs/`
+**Evidence**: `docs/Architecture.md`, `docs/development/BUILDING_BLOCKS.md`, `docs/EXTENSIBILITY.md`, `docs/ADRs/`
 
 ---
 

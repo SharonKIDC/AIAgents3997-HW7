@@ -331,7 +331,7 @@ This project is part of an academic assignment for AIAgents3997-HW7.
 - [Product Requirements](docs/PRD.md) - Complete product requirements
 - [Usage Guide](USAGE.md) - Detailed usage instructions
 - [Test Summary](TEST_SUMMARY.md) - Test coverage and organization
-- [Development Log](docs/PROMPT_LOG.md) - Development process and decisions
+- [Development Log](docs/development/PROMPT_LOG.md) - Development process and decisions
 
 ## Support
 
