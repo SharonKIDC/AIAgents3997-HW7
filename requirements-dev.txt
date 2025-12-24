@@ -13,6 +13,9 @@ mypy>=1.5.0
 pytest-mock>=3.10.0
 pytest-timeout>=2.1.0
 
+# Visualization and analysis
+matplotlib>=3.10.0
+
 # Build tools
 build>=0.10.0
 setuptools>=68.0
