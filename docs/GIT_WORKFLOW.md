@@ -526,6 +526,247 @@ credentials.json
 
 ---
 
+## Agent-Based Workflow (Automated)
+
+This project uses an **automated agent orchestration system** that manages git workflow through specialized agents. This ensures consistent process and quality for all development work.
+
+### Overview
+
+Two orchestrators manage different types of development:
+
+1. **agent-orchestrator.md**: For greenfield projects and PRD-based features
+2. **continuous-dev-orchestrator.md**: For bug fixes, improvements, and ongoing development
+
+**CRITICAL**: Both use the SAME git-workflow agent to ensure consistency.
+
+### Git-Workflow Agent
+
+The `git-workflow` agent has **exclusive authority** over all git operations:
+- Creates branches for each phase and agent
+- Commits changes after each agent execution
+- Merges agent branches using `--no-ff` (preserves history)
+- Enforces minimum commit targets
+- Tracks workflow state in `.git-workflow-state.json`
+
+### Automated Branch Structure
+
+#### Phase Branches
+```
+phase/{phase-name}-YYYYMMDD-HHMMSS
+```
+Examples:
+- `phase/PreProject-20250624-140000`
+- `phase/TaskLoop-20250624-150000`
+- `phase/ContinuousDev-20250624-160000`
+
+#### Agent Branches
+```
+agent/{phase}/{agent-id}-YYYYMMDD-HHMMSS
+```
+Examples:
+- `agent/PreProject/prd-author-20250624-140530`
+- `agent/TaskLoop/implementer-20250624-150215`
+- `agent/ContinuousDev/unit-test-writer-20250624-160445`
+
+### Automated Commit Format
+
+Each agent execution produces a structured commit:
+
+```
+[{PHASE}] {agent-id}: {Brief summary}
+
+Agent: {agent-id}
+Purpose: {agent role/purpose}
+Phase: {current phase}
+
+Changes:
+- Created: {list of created files}
+- Modified: {list of modified files}
+- Tests: {test files added/modified}
+
+Documentation: {link to agent doc file}
+```
+
+Example:
+```
+[TaskLoop] implementer: Add player strategy registry
+
+Agent: implementer
+Purpose: Implement core functionality for task
+Phase: TaskLoop
+
+Changes:
+- Created: src/player/registry.py
+- Modified: src/player/__init__.py
+- Tests: tests/test_registry.py
+
+Documentation: .claude/agents/implementer.md
+```
+
+### Workflow Execution Pattern
+
+#### For Main Orchestrator (PRD-based projects)
+```
+git-workflow(pre_phase: PreProject)
+  ├─ git-workflow(pre_agent) → repo-scaffolder → git-workflow(post_agent)
+  ├─ git-workflow(pre_agent) → prd-author → git-workflow(post_agent)
+  └─ git-workflow(pre_agent) → architecture-author → git-workflow(post_agent)
+git-workflow(post_phase: PreProject) → merge to main, tag
+
+git-workflow(pre_phase: TaskLoop)
+  ├─ git-workflow(pre_agent) → implementer → git-workflow(post_agent)
+  ├─ git-workflow(pre_agent) → quality-commenter → git-workflow(post_agent)
+  └─ git-workflow(pre_agent) → unit-test-writer → git-workflow(post_agent)
+git-workflow(post_phase: TaskLoop) → merge to main, tag
+
+... (ResearchLoop, ReleaseGate follow same pattern)
+```
+
+#### For Continuous Dev Orchestrator (bug fixes, improvements)
+```
+User task: "Fix timeout bug in agent registration"
+
+git-workflow(pre_phase: ContinuousDev)
+  ├─ git-workflow(pre_agent) → implementer → git-workflow(post_agent)
+  ├─ git-workflow(pre_agent) → unit-test-writer → git-workflow(post_agent)
+  ├─ git-workflow(pre_agent) → quality-commenter → git-workflow(post_agent)
+  └─ git-workflow(pre_agent) → prompt-log-updater → git-workflow(post_agent)
+git-workflow(post_phase: ContinuousDev) → merge to main, tag
+
+Result: 4 commits, proper branching, quality gates enforced
+```
+
+### Commit Targets
+
+- **Main orchestrator**: Minimum 15 commits across full project lifecycle
+- **Continuous dev**: 1-5 commits per task (depends on complexity)
+
+### Quality Gates (Automated)
+
+The git-workflow agent enforces:
+
+1. **agent_branch_isolation**: Each agent works on dedicated branch
+2. **clean_merge_history**: All merges use `--no-ff` flag
+3. **commit_message_quality**: All commits follow structured format
+4. **minimum_commits_target**: Project meets commit goals
+
+### Viewing Agent Workflow Progress
+
+#### Full branch/merge tree
+```bash
+git log --graph --oneline --all --decorate
+```
+
+#### Commits by phase
+```bash
+git log --grep="\[PreProject\]" --oneline
+git log --grep="\[TaskLoop\]" --oneline
+git log --grep="\[ContinuousDev\]" --oneline
+```
+
+#### Commits by specific agent
+```bash
+git log --grep="Agent: implementer" --oneline
+git log --grep="Agent: quality-commenter" --oneline
+```
+
+#### Files changed by agent
+```bash
+git log --stat --grep="Agent: implementer"
+```
+
+#### Current workflow state
+```bash
+cat .git-workflow-state.json | jq
+```
+
+Sample output:
+```json
+{
+  "project_start": "2025-12-24T14:00:00Z",
+  "current_phase": "TaskLoop",
+  "phases_completed": ["PreProject"],
+  "current_branch": "phase/TaskLoop-20250624-150000",
+  "agents_executed": [
+    {
+      "agent_id": "implementer",
+      "phase": "TaskLoop",
+      "branch": "agent/TaskLoop/implementer-20250624-150215",
+      "commit_sha": "a1b2c3d",
+      "timestamp": "2025-12-24T15:02:45Z",
+      "files_changed": ["src/player/registry.py", "tests/test_registry.py"]
+    }
+  ],
+  "total_commits": 8,
+  "target_commits": 15,
+  "gates_passed": {"agent_branch_isolation": true, "clean_merge_history": true},
+  "gates_failed": {}
+}
+```
+
+### Success Criteria
+
+A well-managed agent workflow shows:
+- ✅ Each agent has dedicated branch and merge commit
+- ✅ Clear phase boundaries in commit history
+- ✅ Structured commit messages throughout
+- ✅ No direct commits to main (all via agent branches)
+- ✅ Minimum commit targets met
+- ✅ Full merge history preserved with `--no-ff`
+
+### Example: Complete Bug Fix Workflow
+
+```bash
+# User request: "Fix race condition in match scheduler"
+# continuous-dev-orchestrator analyzes and selects agents
+
+# Git-workflow creates phase branch
+phase/ContinuousDev-20250624-160000
+
+# Each agent gets its own branch:
+agent/ContinuousDev/implementer-20250624-160015
+  → Fix implemented → commit → merge to phase branch
+
+agent/ContinuousDev/unit-test-writer-20250624-160045
+  → Test added → commit → merge to phase branch
+
+agent/ContinuousDev/edge-case-defender-20250624-160115
+  → Edge cases verified → commit → merge to phase branch
+
+agent/ContinuousDev/quality-commenter-20250624-160145
+  → Quality reviewed → commit → merge to phase branch
+
+agent/ContinuousDev/prompt-log-updater-20250624-160215
+  → Documentation updated → commit → merge to phase branch
+
+# Git-workflow merges phase to main
+git checkout main
+git merge --no-ff phase/ContinuousDev-20250624-160000
+git tag v-continuous-dev-fix-race-condition-20250624
+
+# Result: 5 commits, complete audit trail, proper process
+```
+
+### Integration with Manual Workflow
+
+The agent-based workflow complements manual development:
+
+**Automated (via orchestrators)**:
+- Greenfield projects
+- PRD implementation
+- Structured bug fixes
+- Quality-gated improvements
+
+**Manual (traditional git)**:
+- Experimental work
+- Quick prototypes
+- Manual hotfixes (urgent)
+- Documentation-only changes
+
+Both workflows can coexist on the same repository.
+
+---
+
 ## Project-Specific Guidelines
 
 ### For This Project (AIAgents3997-HW7)

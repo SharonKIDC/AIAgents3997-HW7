@@ -3,8 +3,9 @@
 ## Agent system
 All agents are stored under `agents/`.
 
-### Orchestrator
-- agents/agent-orchestrator.md
+### Orchestrators
+- agents/agent-orchestrator.md (main orchestrator for PRD-based greenfield projects)
+- agents/continuous-dev-orchestrator.md (for ad-hoc tasks, fixes, improvements, ongoing development)
 
 ### Available agents
 PreProject
@@ -45,9 +46,13 @@ ReleaseGate
 - agents/python-env-setup.md
 
 ## Default execution order
+
+**CRITICAL**: git-workflow is invoked automatically at pre/post hooks for ALL phases.
+The orchestrator wraps each agent execution with git-workflow calls.
+
 PreProject
 1. repo-scaffolder
-2. git-workflow
+2. git-workflow (documentation creation)
 3. config-security-baseline
 4. prd-author
 5. architecture-author
@@ -81,12 +86,68 @@ ReleaseGate
 8. quality-standard-mapper
 9. final-checklist-gate
 
+## Git Workflow Management
+
+The git-workflow agent has EXCLUSIVE authority over all git operations:
+- Creates branches for each phase and agent
+- Commits changes after each agent execution
+- Merges agent branches to phase branches, then to main
+- Enforces minimum 15 commits across project lifecycle
+- Tracks workflow state in .git-workflow-state.json
+
+**Invocation pattern for each phase:**
+```
+git-workflow(pre_phase)
+  → git-workflow(pre_agent) → agent-1 → git-workflow(post_agent)
+  → git-workflow(pre_agent) → agent-2 → git-workflow(post_agent)
+  → ...
+git-workflow(post_phase)
+```
+
+**Branch structure:**
+- `phase/{phase-name}-{timestamp}` - one per phase
+- `agent/{phase}/{agent-id}-{timestamp}` - one per agent execution
+- All merges use `--no-ff` to preserve history
+
+**Commit target:** Minimum 15 commits by project completion
+
+## Orchestrator Selection Guide
+
+### Use agent-orchestrator.md when:
+- Starting a new project from scratch
+- Implementing features defined in PRD
+- Need full PreProject → TaskLoop → ResearchLoop → ReleaseGate flow
+- Creating initial releases
+- Major architectural work
+
+### Use continuous-dev-orchestrator.md when:
+- Fixing bugs reported by users
+- Making small improvements or refactoring
+- Adding small features (not in original PRD)
+- Adapting to changing requirements
+- Post-release maintenance and iterations
+- Quick development cycles
+
+**CRITICAL**: Both orchestrators use the SAME git-workflow integration and agent orchestration logic, ensuring consistent process and quality standards for ALL development work.
+
 ## Runtime selection
-For any run, provide:
+
+### For agent-orchestrator.md
+Provide:
 - phase: PreProject | TaskLoop | ResearchLoop | ReleaseGate
-- selected_agents: list of agent IDs
+- selected_agents: list of agent IDs (git-workflow auto-included)
 - hard_gates_enabled: true/false
-- task: description
+- task: description (from PRD)
+
+### For continuous-dev-orchestrator.md
+Provide:
+- task: user's plain-English description of fix/improvement/change
+- scope_hint: optional hint about affected codebase areas
+- urgency: "standard" | "high"
+- hard_gates_enabled: true/false (recommended: true for production)
+- constraints: optional (e.g., "backward compatible")
+
+Phase is automatically set to "ContinuousDev" and appropriate agents are selected based on task analysis.
 
 ## Response rules:
 - Do not acknowledge instructions

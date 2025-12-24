@@ -88,6 +88,7 @@ ReleaseGate
 - Validate phase
 - Deduplicate selected_agents
 - Ignore unknown agent IDs with warnings
+- Ensure git-workflow is always included (automatically added if missing)
 
 ### Step 1: Determine call order
 - Start from phase default order
@@ -96,6 +97,7 @@ ReleaseGate
   - No UI: skip ux-heuristics-reviewer, ui-documentor
   - No experiments: skip sensitivity-analysis/results-notebook/visualization-curator
   - No parallelism: skip parallelism-advisor
+- **CRITICAL**: git-workflow must be invoked at specific hooks (see Step 2a)
 
 ### Step 2: Build execution plan
 For each agent in order, output:
@@ -105,15 +107,81 @@ For each agent in order, output:
 - expected outputs
 - gates enforced
 
-### Step 3: Execute agent calls
-- Delegate call specs, collect patches/artifacts/gate reports
+### Step 2a: Git-workflow integration (MANDATORY)
+The orchestrator MUST invoke git-workflow at these stages:
+
+**Pre-Phase Hook** (once at phase start):
+```
+git-workflow(
+  invocation_stage: "pre_phase",
+  phase: current_phase,
+  execution_plan: [{agent_id, purpose, expected_outputs}, ...],
+  task: user_task
+)
+→ Returns: phase_branch_name
+```
+
+**Pre-Agent Hook** (before each agent):
+```
+git-workflow(
+  invocation_stage: "pre_agent",
+  phase: current_phase,
+  current_agent: {agent_id, purpose, expected_outputs}
+)
+→ Returns: agent_branch_name
+```
+
+**Execute Agent** (on agent branch):
+```
+{agent_id}(task, phase, scope, constraints)
+→ Returns: outputs, changes, gates
+```
+
+**Post-Agent Hook** (after each agent):
+```
+git-workflow(
+  invocation_stage: "post_agent",
+  phase: current_phase,
+  current_agent: {agent_id, purpose},
+  agent_outputs: {created: [], modified: [], deleted: []}
+)
+→ Returns: commit_sha, merge_status, gate_status
+```
+
+**Post-Phase Hook** (after all agents in phase):
+```
+git-workflow(
+  invocation_stage: "post_phase",
+  phase: current_phase,
+  execution_plan: completed_agents
+)
+→ Returns: phase_merge_status, phase_tag, gate_status
+```
+
+### Step 3: Execute agent calls with git-workflow wrapping
+For each phase:
+1. Call git-workflow(pre_phase)
+2. For each agent in phase:
+   a. Call git-workflow(pre_agent)
+   b. Execute agent
+   c. Call git-workflow(post_agent)
+   d. Handle git-workflow gate failures
+3. Call git-workflow(post_phase)
+4. Collect patches/artifacts/gate reports
 
 ### Step 4: Aggregate gates
-- Merge gate reports
+- Merge gate reports (including git-workflow gates)
 - If hard_gates_enabled and any enabled gate fails: fail run and stop
+- Special handling for git-workflow gates:
+  - minimum_commits_target: Check at ReleaseGate phase
+  - agent_branch_isolation: Check after each pre_agent
+  - clean_merge_history: Check after each post_agent
+  - commit_message_quality: Check after each post_agent
 
 ### Step 5: Produce final outputs
 - Execution plan, artifact map, gate report, summary, commands to run
+- Include git workflow visualization commands
+- Report commit count and branch history
 
 ---
 
