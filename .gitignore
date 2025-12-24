@@ -216,8 +216,10 @@ logs/*.jsonl
 agent_league_system.egg-info/
 venv/
 .pytest_cache/
-docs/development/deliverables/
 
-# Claude Code
-.claude/plans/
+# Development process documentation (agent-generated)
+docs/development/
+
+# Claude Code agent system
+.claude/
 
