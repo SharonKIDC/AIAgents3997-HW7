@@ -211,11 +211,13 @@ data/*.db
 data/*.db-journal
 logs/*.log
 logs/*.jsonl
-docs/deliverables/
 
 # Build and test artifacts
 agent_league_system.egg-info/
 venv/
 .pytest_cache/
-docs/deliverables/
+docs/development/deliverables/
+
+# Claude Code
+.claude/plans/
 
