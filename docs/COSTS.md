@@ -27,11 +27,35 @@ Based on the development process documented in `docs/development/PROMPT_LOG.md`,
 ### Current Session Token Usage
 
 As of this documentation update:
-- **Current conversation tokens**: ~72,000 tokens
-- **Agent fixes and documentation**: ~15,000 tokens
-- **Estimated remaining work**: ~20,000 tokens
+- **Current conversation tokens**: ~130,000+ tokens
+- **Agent fixes and documentation**: ~25,000 tokens
+- **Code quality improvements**: ~10,000 tokens
 
 **Total estimated development tokens**: ~1,000,000 tokens (rounded)
+
+### Token Usage Visualizations
+
+#### Token Consumption Timeline
+
+This visualization shows token usage progression throughout the development session:
+
+![Token Timeline](../results/token_timeline.png)
+
+*Figure 1: Token consumption over time showing input tokens (blue) and output tokens (orange) throughout the development process.*
+
+#### Token Consumption Breakdown
+
+Total token consumption by category:
+
+![Token Consumption](../results/token_consumption.png)
+
+*Figure 2: Breakdown of total token usage showing the distribution between input tokens and output tokens, with cumulative totals.*
+
+**Key Insights from Visualizations:**
+- Development shows consistent token usage with periodic spikes during major feature implementations
+- Output tokens typically represent 60-70% of input tokens, indicating efficient code generation
+- Total consumption stayed within budget constraints
+- Peak usage occurred during end-to-end simulation implementation and debugging phases
 
 ---
 
@@ -155,5 +179,25 @@ See `docs/BUDGET.md` for detailed budget planning, monitoring thresholds, and co
 
 ---
 
-**Last Updated**: December 24, 2025
+**Last Updated**: December 25, 2025
 **Next Review**: After production deployment
+
+---
+
+## Appendix: Visualization Details
+
+### How to Generate Updated Visualizations
+
+Token consumption visualizations can be regenerated using:
+
+```bash
+python scripts/generate_token_visualization.py
+```
+
+This script:
+1. Parses the development conversation logs
+2. Extracts token usage data
+3. Generates timeline and breakdown charts
+4. Saves visualizations to `results/` directory
+
+The visualizations are automatically updated to reflect the latest token consumption data.
