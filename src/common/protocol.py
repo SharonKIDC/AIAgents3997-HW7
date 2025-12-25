@@ -35,6 +35,16 @@ class MessageType(str, Enum):
     QUERY_STANDINGS = "QUERY_STANDINGS"
     STANDINGS_RESPONSE = "STANDINGS_RESPONSE"
 
+    # League Manager - Agent Ready messages
+    AGENT_READY_REQUEST = "AGENT_READY_REQUEST"
+    AGENT_READY_RESPONSE = "AGENT_READY_RESPONSE"
+
+    # League Manager - Admin messages
+    ADMIN_START_LEAGUE_REQUEST = "ADMIN_START_LEAGUE_REQUEST"
+    ADMIN_START_LEAGUE_RESPONSE = "ADMIN_START_LEAGUE_RESPONSE"
+    ADMIN_GET_STATUS_REQUEST = "ADMIN_GET_STATUS_REQUEST"
+    ADMIN_GET_STATUS_RESPONSE = "ADMIN_GET_STATUS_RESPONSE"
+
     # Referee - Player messages
     GAME_INVITATION = "GAME_INVITATION"
     GAME_JOIN_ACK = "GAME_JOIN_ACK"
@@ -135,6 +145,7 @@ def validate_sender_format(sender: str) -> None:
 
     Valid formats:
     - league_manager
+    - admin
     - referee:<referee_id>
     - player:<player_id>
 
@@ -144,7 +155,7 @@ def validate_sender_format(sender: str) -> None:
     Raises:
         ValidationError: If format is invalid
     """
-    if sender == "league_manager":
+    if sender in ["league_manager", "admin"]:
         return
 
     pattern = r'^(referee|player):[a-zA-Z0-9_-]+$'
@@ -152,7 +163,7 @@ def validate_sender_format(sender: str) -> None:
         raise ValidationError(
             f"Invalid sender format: {sender}",
             field="sender",
-            expected_format="league_manager|referee:<id>|player:<id>"
+            expected_format="league_manager|admin|referee:<id>|player:<id>"
         )
 
 

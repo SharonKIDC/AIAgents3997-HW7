@@ -32,6 +32,8 @@ class ErrorCode(IntEnum):
     DUPLICATE_RESULT = 4017
     VALIDATION_ERROR = 4018
     PRECONDITION_FAILED = 4019
+    INVALID_REFEREE_ID = 4020
+    INVALID_PLAYER_ID = 4021
 
     # Operational Errors (5xx equivalent) - Server errors
     INTERNAL_ERROR = 5000
@@ -43,6 +45,7 @@ class ErrorCode(IntEnum):
     PERSISTENCE_FAILED = 5006
     AUDIT_LOG_FAILED = 5007
     CONFIGURATION_ERROR = 5008
+    COMMUNICATION_ERROR = 5009
 
 
 class LeagueError(Exception):

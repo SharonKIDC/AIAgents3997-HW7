@@ -7,7 +7,7 @@ import logging
 from typing import Dict, Any, List
 
 from ..common.persistence import LeagueDatabase
-from ..common.protocol import utc_now, generate_conversation_id
+from ..common.protocol import utc_now, generate_conversation_id, Envelope, MessageType
 from ..common.transport import LeagueHTTPClient
 from ..common.errors import OperationalError, ErrorCode
 
@@ -62,12 +62,8 @@ class MatchAssigner:
         referee_idx = 0
 
         for match in pending_matches:
-            # Find next available referee (simple round-robin)
-            if referee_idx >= len(active_referees):
-                logger.warning("No more available referees for remaining matches")
-                break
-
-            referee = active_referees[referee_idx]
+            # Find next available referee (round-robin with wraparound)
+            referee = active_referees[referee_idx % len(active_referees)]
             referee_id = referee['referee_id']
 
             # Assign match
@@ -119,9 +115,54 @@ class MatchAssigner:
             )
 
         # Send assignment to referee
-        # Note: In a full implementation, we would look up referee endpoint
-        # For now, we'll log the assignment
-        logger.info(f"Assigned match {match_id} to referee {referee_id}")
+        referee = self.database.get_referee(referee_id)
+        if not referee or not referee.get('endpoint_url'):
+            raise OperationalError(
+                ErrorCode.INVALID_REFEREE_ID,
+                f"Referee {referee_id} not found or has no endpoint URL"
+            )
+
+        referee_url = referee['endpoint_url']
+
+        # Create MATCH_ASSIGNMENT envelope
+        envelope = Envelope(
+            protocol="league.v2",
+            message_type=MessageType.MATCH_ASSIGNMENT.value,
+            sender="league_manager",
+            timestamp=utc_now(),
+            conversation_id=generate_conversation_id(),
+            match_id=match_id,
+            round_id=match['round_id'],
+            game_type=game_type
+        )
+
+        # Get player endpoint URLs
+        player_endpoints = {}
+        for player_id in players:
+            player = self.database.get_player(player_id)
+            if player and player.get('endpoint_url'):
+                player_endpoints[player_id] = player['endpoint_url']
+            else:
+                logger.warning(f"Player {player_id} has no endpoint URL")
+
+        payload = {
+            'match_id': match_id,
+            'round_id': match['round_id'],
+            'game_type': game_type,
+            'players': players,
+            'player_endpoints': player_endpoints
+        }
+
+        # Send to referee
+        try:
+            self.http_client.send_request(referee_url, envelope, payload)
+            logger.info(f"Sent match assignment {match_id} to referee {referee_id} at {referee_url}")
+        except Exception as e:
+            logger.error(f"Failed to send match assignment to referee {referee_id}: {e}")
+            raise OperationalError(
+                ErrorCode.COMMUNICATION_ERROR,
+                f"Failed to send assignment to referee: {str(e)}"
+            )
 
         return {
             'match_id': match_id,

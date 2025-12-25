@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 from ..common.persistence import LeagueDatabase
 from ..common.auth import AuthManager, AgentType
-from ..common.protocol import Envelope, utc_now, generate_conversation_id
+from ..common.protocol import Envelope, utc_now
 from ..common.errors import (
     DuplicateRegistrationError,
     RegistrationClosedError,
@@ -42,13 +42,15 @@ class RegistrationHandler:
     def register_referee(
         self,
         referee_id: str,
-        envelope: Envelope
+        envelope: Envelope,
+        endpoint_url: str = None
     ) -> Dict[str, Any]:
         """Register a referee with the league.
 
         Args:
             referee_id: Unique referee identifier
             envelope: Request envelope
+            endpoint_url: Referee's endpoint URL for receiving match assignments
 
         Returns:
             Registration response payload
@@ -74,10 +76,11 @@ class RegistrationHandler:
             referee_id,
             self.league_state.league_id,
             auth_token,
-            utc_now()
+            utc_now(),
+            endpoint_url
         )
 
-        logger.info(f"Registered referee: {referee_id}")
+        logger.info(f"Registered referee: {referee_id} at {endpoint_url}")
 
         return {
             'status': 'registered',
@@ -88,13 +91,15 @@ class RegistrationHandler:
     def register_player(
         self,
         player_id: str,
-        envelope: Envelope
+        envelope: Envelope,
+        endpoint_url: str = None
     ) -> Dict[str, Any]:
         """Register a player with the league.
 
         Args:
             player_id: Unique player identifier
             envelope: Request envelope
+            endpoint_url: Player's endpoint URL for receiving game invitations
 
         Returns:
             Registration response payload
@@ -128,10 +133,11 @@ class RegistrationHandler:
             player_id,
             self.league_state.league_id,
             auth_token,
-            utc_now()
+            utc_now(),
+            endpoint_url
         )
 
-        logger.info(f"Registered player: {player_id}")
+        logger.info(f"Registered player: {player_id} at {endpoint_url}")
 
         return {
             'status': 'registered',

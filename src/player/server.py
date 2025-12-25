@@ -99,7 +99,8 @@ class PlayerServer:
         )
 
         payload = {
-            'player_id': self.player_id
+            'player_id': self.player_id,
+            'endpoint_url': f"http://{self.host}:{self.port}/mcp"
         }
 
         try:
@@ -115,6 +116,44 @@ class PlayerServer:
             return True
         except Exception as e:
             logger.error(f"Registration failed: {e}")
+            return False
+
+    def send_ready(self) -> bool:
+        """Send ready signal to League Manager.
+
+        Signals that the player has completed initialization and is ready
+        to participate in matches.
+
+        Returns:
+            True if ready signal acknowledged
+        """
+        if not self.auth_token:
+            logger.error("Cannot send ready signal: not registered")
+            return False
+
+        envelope = Envelope(
+            protocol="league.v2",
+            message_type=MessageType.AGENT_READY_REQUEST.value,
+            sender=f"player:{self.player_id}",
+            timestamp=utc_now(),
+            conversation_id=generate_conversation_id(),
+            auth_token=self.auth_token
+        )
+
+        payload = {}
+
+        try:
+            result = self.http_client.send_request(
+                self.league_manager_url,
+                envelope,
+                payload
+            )
+            response_payload = result.get('payload', {})
+            agent_state = response_payload.get('agent_state')
+            logger.info(f"Player ready signal acknowledged. Status: {agent_state}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send ready signal: {e}")
             return False
 
     def _handle_request(self, request: JSONRPCRequest) -> JSONRPCResponse:

@@ -90,6 +90,9 @@ class LeagueManagerServer:
             MessageType.REGISTER_PLAYER_REQUEST: self._handle_register_player,
             MessageType.MATCH_RESULT_REPORT: self._handle_match_result,
             MessageType.QUERY_STANDINGS: self._handle_query_standings,
+            MessageType.AGENT_READY_REQUEST: self._handle_agent_ready,
+            MessageType.ADMIN_START_LEAGUE_REQUEST: self._handle_admin_start_league,
+            MessageType.ADMIN_GET_STATUS_REQUEST: self._handle_admin_get_status,
         }
 
     def start(self):
@@ -129,9 +132,15 @@ class LeagueManagerServer:
                 "league_manager"
             )
 
-            # Validate authentication (except for registration requests)
+            # Validate authentication (except for registration and admin requests)
             message_type = MessageType(envelope.message_type)
-            if message_type not in [MessageType.REGISTER_REFEREE_REQUEST, MessageType.REGISTER_PLAYER_REQUEST]:
+            exempt_from_auth = [
+                MessageType.REGISTER_REFEREE_REQUEST,
+                MessageType.REGISTER_PLAYER_REQUEST,
+                MessageType.ADMIN_START_LEAGUE_REQUEST,
+                MessageType.ADMIN_GET_STATUS_REQUEST,
+            ]
+            if message_type not in exempt_from_auth:
                 if not envelope.auth_token:
                     raise ValidationError("Missing auth_token", field="auth_token")
                 self.auth_manager.verify_sender(envelope.auth_token, envelope.sender)
@@ -197,7 +206,8 @@ class LeagueManagerServer:
         if not referee_id:
             raise ValidationError("Missing referee_id", field="referee_id")
 
-        return self.registration_handler.register_referee(referee_id, envelope)
+        endpoint_url = payload.get('endpoint_url')
+        return self.registration_handler.register_referee(referee_id, envelope, endpoint_url)
 
     def _handle_register_player(
         self,
@@ -209,7 +219,8 @@ class LeagueManagerServer:
         if not player_id:
             raise ValidationError("Missing player_id", field="player_id")
 
-        return self.registration_handler.register_player(player_id, envelope)
+        endpoint_url = payload.get('endpoint_url')
+        return self.registration_handler.register_player(player_id, envelope, endpoint_url)
 
     def _handle_match_result(
         self,
@@ -261,6 +272,22 @@ class LeagueManagerServer:
 
         logger.info(f"Match result recorded: {match_id}")
 
+        # Check if all matches are complete
+        pending_matches = self.database.get_pending_matches(self.league_state.league_id)
+        if not pending_matches:
+            # Check if any matches are still in progress
+            all_matches = self.database.conn.execute(
+                '''SELECT COUNT(*) FROM matches m
+                   JOIN rounds r ON m.round_id = r.round_id
+                   WHERE r.league_id = ? AND m.status != 'COMPLETED' ''',
+                (self.league_state.league_id,)
+            ).fetchone()[0]
+
+            if all_matches == 0:
+                # All matches complete - transition to COMPLETED
+                self.league_state.transition_to(LeagueStatus.COMPLETED)
+                logger.info("All matches complete. League status: COMPLETED")
+
         return {
             'status': 'acknowledged',
             'match_id': match_id
@@ -289,6 +316,100 @@ class LeagueManagerServer:
                 'standings': []
             }
 
+    def _handle_agent_ready(
+        self,
+        envelope: Envelope,
+        payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle agent ready notification.
+
+        Agents send this after registration and initialization to signal
+        they're ready to participate in matches.
+        """
+        # Parse sender to determine agent type and ID
+        sender = envelope.sender
+        if ':' not in sender:
+            raise ValidationError(
+                f"Invalid sender format for ready signal: {sender}",
+                field="sender"
+            )
+
+        agent_type, agent_id = sender.split(':', 1)
+
+        # Verify agent is registered
+        if agent_type == 'referee':
+            agent = self.database.get_referee(agent_id)
+            if not agent:
+                raise ValidationError(f"Unknown referee: {agent_id}", field="sender")
+
+            # Update status to ACTIVE
+            self.database.update_referee_status(agent_id, 'ACTIVE')
+            logger.info(f"Referee {agent_id} is now ACTIVE")
+
+        elif agent_type == 'player':
+            agent = self.database.get_player(agent_id)
+            if not agent:
+                raise ValidationError(f"Unknown player: {agent_id}", field="sender")
+
+            # Update status to ACTIVE
+            self.database.update_player_status(agent_id, 'ACTIVE')
+            logger.info(f"Player {agent_id} is now ACTIVE")
+
+        else:
+            raise ValidationError(
+                f"Invalid agent type for ready signal: {agent_type}",
+                field="sender"
+            )
+
+        return {
+            'status': 'acknowledged',
+            'agent_id': agent_id,
+            'agent_type': agent_type,
+            'agent_state': 'ACTIVE'
+        }
+
+    def _handle_admin_start_league(
+        self,
+        envelope: Envelope,
+        payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle admin request to start the league.
+
+        This closes registration, generates schedule, and transitions to ACTIVE.
+        """
+        success = self.close_registration_and_schedule()
+
+        if success:
+            return {
+                'status': 'started',
+                'league_status': self.league_state.status.value,
+                'message': 'League started successfully'
+            }
+        else:
+            raise ValidationError(
+                "Cannot start league: minimum requirements not met",
+                details={
+                    'referees': self.league_state.get_referee_count(),
+                    'players': self.league_state.get_player_count(),
+                    'min_referees': 1,
+                    'min_players': 2
+                }
+            )
+
+    def _handle_admin_get_status(
+        self,
+        envelope: Envelope,
+        payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle admin request to get detailed league status."""
+        return {
+            'league_id': self.league_state.league_id,
+            'status': self.league_state.status.value,
+            'referees': self.league_state.get_referee_count(),
+            'players': self.league_state.get_player_count(),
+            'can_start': self.league_state.can_close_registration()
+        }
+
     def _get_response_type(self, request_type: MessageType) -> str:
         """Get response message type for a request type."""
         response_map = {
@@ -296,6 +417,9 @@ class LeagueManagerServer:
             MessageType.REGISTER_PLAYER_REQUEST: MessageType.REGISTER_PLAYER_RESPONSE.value,
             MessageType.MATCH_RESULT_REPORT: MessageType.MATCH_RESULT_ACK.value,
             MessageType.QUERY_STANDINGS: MessageType.STANDINGS_RESPONSE.value,
+            MessageType.AGENT_READY_REQUEST: MessageType.AGENT_READY_RESPONSE.value,
+            MessageType.ADMIN_START_LEAGUE_REQUEST: MessageType.ADMIN_START_LEAGUE_RESPONSE.value,
+            MessageType.ADMIN_GET_STATUS_REQUEST: MessageType.ADMIN_GET_STATUS_RESPONSE.value,
         }
         return response_map.get(request_type, "UNKNOWN_RESPONSE")
 
@@ -332,8 +456,33 @@ class LeagueManagerServer:
 
         logger.info(f"Generated schedule: {schedule['total_rounds']} rounds, {schedule['total_matches']} matches")
 
+        # NOTE: Agents must send AGENT_READY_REQUEST to transition from REGISTERED to ACTIVE
+        # This ensures only operational agents participate in matches
+        logger.info("Waiting for agents to signal ready status...")
+
         # Transition to active
         self.league_state.transition_to(LeagueStatus.ACTIVE)
+
+        # Wait for agents to send ready signals (poll with timeout)
+        import time
+        max_wait_seconds = 10
+        poll_interval = 0.5
+        waited = 0
+
+        while waited < max_wait_seconds:
+            referees = self.database.get_all_referees(self.league_state.league_id)
+            active_referees = [r for r in referees if r['status'] == 'ACTIVE']
+
+            if len(active_referees) > 0:
+                logger.info(f"Found {len(active_referees)} active referee(s). Proceeding with match assignment.")
+                break
+
+            logger.debug(f"Waiting for referees to signal ready... ({waited:.1f}s elapsed)")
+            time.sleep(poll_interval)
+            waited += poll_interval
+
+        if waited >= max_wait_seconds:
+            logger.warning(f"Timeout waiting for referees to signal ready after {max_wait_seconds}s")
 
         # Assign matches
         self.match_assigner.assign_pending_matches(self.league_state.league_id)

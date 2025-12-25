@@ -699,7 +699,242 @@ http_requests_total{method="GET",endpoint="/health",status="200"} 89
 
 ---
 
+## League Lifecycle After Registration
+
+### Checking Registration Status
+
+After players and referees have registered, check the league status:
+
+```bash
+$ curl http://localhost:8000/status
+
+{
+  "status": "REGISTRATION",
+  "league_id": "default-league",
+  "referees": 2,
+  "players": 4
+}
+```
+
+### Understanding League States
+
+The league follows this progression:
+
+```
+INIT → REGISTRATION → SCHEDULING → ACTIVE → COMPLETED
+```
+
+**Current Implementation Note**:
+The system does not currently expose HTTP endpoints to trigger state transitions after registration. League progression requires code-level access or direct database manipulation.
+
+### Querying Standings During Active League
+
+Once the league is in ACTIVE state (matches are running), players can query standings:
+
+```bash
+$ curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "league.handle",
+    "params": {
+      "envelope": {
+        "protocol": "league.v2",
+        "message_type": "QUERY_STANDINGS",
+        "sender": "player:player-001",
+        "timestamp": "2025-12-25T10:00:00Z",
+        "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+        "auth_token": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+      },
+      "payload": {}
+    },
+    "id": "standings-req-1"
+  }' | jq
+
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "envelope": {
+      "protocol": "league.v2",
+      "message_type": "STANDINGS_RESPONSE",
+      "sender": "league_manager",
+      "timestamp": "2025-12-25T10:00:01.234Z",
+      "conversation_id": "550e8400-e29b-41d4-a716-446655440000",
+      "league_id": "default-league"
+    },
+    "payload": {
+      "standings": [
+        {
+          "rank": 1,
+          "player_id": "player-003",
+          "points": 9,
+          "wins": 3,
+          "losses": 0,
+          "draws": 0,
+          "win_rate": 1.0,
+          "point_differential": 9
+        },
+        {
+          "rank": 2,
+          "player_id": "player-001",
+          "points": 6,
+          "wins": 2,
+          "losses": 1,
+          "draws": 0,
+          "win_rate": 0.667,
+          "point_differential": 3
+        },
+        {
+          "rank": 3,
+          "player_id": "player-002",
+          "points": 3,
+          "wins": 1,
+          "losses": 2,
+          "draws": 0,
+          "win_rate": 0.333,
+          "point_differential": -3
+        }
+      ],
+      "updated_at": "2025-12-25T10:00:00Z"
+    }
+  },
+  "id": "standings-req-1"
+}
+```
+
+### Monitoring Active League
+
+#### Checking Audit Logs
+
+The audit log contains all protocol messages:
+
+```bash
+$ tail -f ./logs/audit.jsonl | jq
+
+{
+  "timestamp": "2025-12-25T10:05:23.456Z",
+  "direction": "request",
+  "from": "player:alice",
+  "to": "league_manager",
+  "envelope": {
+    "protocol": "league.v2",
+    "message_type": "QUERY_STANDINGS",
+    "sender": "player:alice",
+    "conversation_id": "123e4567-e89b-12d3-a456-426614174000"
+  }
+}
+{
+  "timestamp": "2025-12-25T10:05:23.789Z",
+  "direction": "response",
+  "from": "league_manager",
+  "to": "player:alice",
+  "envelope": {
+    "protocol": "league.v2",
+    "message_type": "STANDINGS_RESPONSE",
+    "sender": "league_manager",
+    "conversation_id": "123e4567-e89b-12d3-a456-426614174000"
+  }
+}
+```
+
+#### Inspecting Database State
+
+```bash
+$ sqlite3 ./data/league.db
+
+sqlite> -- Check league status
+sqlite> SELECT league_id, status, created_at FROM leagues;
+default-league|ACTIVE|2025-12-25 09:00:00
+
+sqlite> -- Check all registered players
+sqlite> SELECT player_id, status, registered_at FROM players;
+player-001|ACTIVE|2025-12-25 09:05:00
+player-002|ACTIVE|2025-12-25 09:05:05
+player-003|ACTIVE|2025-12-25 09:05:10
+player-004|ACTIVE|2025-12-25 09:05:15
+
+sqlite> -- Check match results
+sqlite> SELECT match_id, status, created_at FROM matches LIMIT 5;
+match-001|COMPLETED|2025-12-25 09:30:00
+match-002|COMPLETED|2025-12-25 09:32:00
+match-003|IN_PROGRESS|2025-12-25 09:34:00
+match-004|PENDING|2025-12-25 09:30:00
+match-005|PENDING|2025-12-25 09:30:00
+
+sqlite> -- View current standings
+sqlite> SELECT
+   ...>   rank, player_id, points, wins, losses, draws
+   ...> FROM standings_snapshots
+   ...> WHERE league_id = 'default-league'
+   ...> ORDER BY rank;
+1|player-003|9|3|0|0
+2|player-001|6|2|1|0
+3|player-002|3|1|2|0
+4|player-004|0|0|3|0
+
+sqlite> .quit
+```
+
+### Complete Workflow Summary
+
+Here's the complete workflow from start to finish:
+
+```bash
+# 1. Start League Manager
+$ python -m src.league_manager.main --port 8000
+# League starts in REGISTRATION state
+
+# 2. Start Referee(s)
+$ python -m src.referee.main referee1 --port 8001 &
+$ python -m src.referee.main referee2 --port 8002 &
+
+# 3. Start Players
+$ python -m src.player.main player1 --port 9001 --strategy smart &
+$ python -m src.player.main player2 --port 9002 --strategy smart &
+$ python -m src.player.main player3 --port 9003 --strategy random &
+$ python -m src.player.main player4 --port 9004 --strategy random &
+
+# 4. Check registration status
+$ curl http://localhost:8000/status | jq
+{
+  "status": "REGISTRATION",
+  "league_id": "default-league",
+  "referees": 2,
+  "players": 4
+}
+
+# 5. Transition to SCHEDULING (currently requires code access)
+# NOTE: No HTTP endpoint exists for this operation
+# See docs/USAGE.md for details on league lifecycle management
+
+# 6. Query standings (once league is ACTIVE)
+$ curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "league.handle",
+    "params": {
+      "envelope": {
+        "protocol": "league.v2",
+        "message_type": "QUERY_STANDINGS",
+        "sender": "player:player1",
+        "timestamp": "2025-12-25T10:00:00Z",
+        "conversation_id": "uuid-here",
+        "auth_token": "token-here"
+      },
+      "payload": {}
+    },
+    "id": "req-1"
+  }' | jq
+
+# 7. Monitor progress
+$ tail -f ./logs/audit.jsonl
+$ tail -f ./logs/league_manager.log
+```
+
+---
+
 **For more examples, see**:
-- [API Documentation](../API.md)
-- [Usage Guide](../USAGE.md)
-- [Prompt Book](../../PROMPT_BOOK.md)
+- [Usage Guide](../USAGE.md) - Complete usage documentation including lifecycle management
+- [Architecture Documentation](../Architecture.md) - System architecture and design
+- [PRD](../PRD.md) - Protocol specification and requirements

@@ -87,7 +87,8 @@ class RefereeServer:
         )
 
         payload = {
-            'referee_id': self.referee_id
+            'referee_id': self.referee_id,
+            'endpoint_url': f"http://{self.host}:{self.port}/mcp"
         }
 
         try:
@@ -103,6 +104,44 @@ class RefereeServer:
             return True
         except Exception as e:
             logger.error(f"Registration failed: {e}")
+            return False
+
+    def send_ready(self) -> bool:
+        """Send ready signal to League Manager.
+
+        Signals that the referee has completed initialization and is ready
+        to accept match assignments.
+
+        Returns:
+            True if ready signal acknowledged
+        """
+        if not self.auth_token:
+            logger.error("Cannot send ready signal: not registered")
+            return False
+
+        envelope = Envelope(
+            protocol="league.v2",
+            message_type=MessageType.AGENT_READY_REQUEST.value,
+            sender=f"referee:{self.referee_id}",
+            timestamp=utc_now(),
+            conversation_id=generate_conversation_id(),
+            auth_token=self.auth_token
+        )
+
+        payload = {}
+
+        try:
+            result = self.http_client.send_request(
+                self.league_manager_url,
+                envelope,
+                payload
+            )
+            response_payload = result.get('payload', {})
+            agent_state = response_payload.get('agent_state')
+            logger.info(f"Referee ready signal acknowledged. Status: {agent_state}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send ready signal: {e}")
             return False
 
     def _handle_request(self, request: JSONRPCRequest) -> JSONRPCResponse:
@@ -181,37 +220,44 @@ class RefereeServer:
         round_id = payload.get('round_id')
         game_type = payload.get('game_type')
         players = payload.get('players', [])
+        player_endpoints = payload.get('player_endpoints', {})
 
         logger.info(f"Received match assignment: {match_id}, players: {players}")
 
-        # Set up player URLs (for localhost testing, assume ports 9001+)
-        # In production, these would be discovered from the league or passed in payload
-        base_port = 9001
-        for i, player_id in enumerate(players):
-            self.player_urls[player_id] = f"http://localhost:{base_port + i}/mcp"
+        # Use player endpoints from payload
+        for player_id, endpoint_url in player_endpoints.items():
+            self.player_urls[player_id] = endpoint_url
+            logger.debug(f"Player {player_id} endpoint: {endpoint_url}")
 
-        # Execute match in background (simplified - should be async)
-        try:
-            executor = MatchExecutor(
-                self.referee_id,
-                self.http_client,
-                self.player_urls
-            )
+        # Execute match in background thread (asynchronous)
+        import threading
+        def execute_match_async():
+            try:
+                executor = MatchExecutor(
+                    self.referee_id,
+                    self.http_client,
+                    self.player_urls
+                )
 
-            result = executor.execute_match(
-                match_id,
-                round_id,
-                game_type,
-                players,
-                self.league_id
-            )
+                result = executor.execute_match(
+                    match_id,
+                    round_id,
+                    game_type,
+                    players,
+                    self.league_id
+                )
 
-            # Report result to League Manager
-            self._report_result(result)
+                # Report result to League Manager
+                self._report_result(result)
 
-        except Exception as e:
-            logger.error(f"Match execution failed: {e}")
+            except Exception as e:
+                logger.error(f"Match execution failed: {e}")
 
+        # Start match execution in background
+        match_thread = threading.Thread(target=execute_match_async, daemon=True)
+        match_thread.start()
+
+        # Return acknowledgement immediately
         return {
             'status': 'acknowledged',
             'match_id': match_id

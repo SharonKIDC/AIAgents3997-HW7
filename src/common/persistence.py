@@ -70,6 +70,7 @@ class LeagueDatabase:
                     referee_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
                     auth_token TEXT NOT NULL UNIQUE,
+                    endpoint_url TEXT,
                     status TEXT NOT NULL CHECK(status IN ('REGISTERED', 'ACTIVE', 'SUSPENDED', 'SHUTDOWN')),
                     registered_at TEXT NOT NULL,
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id)
@@ -82,6 +83,7 @@ class LeagueDatabase:
                     player_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
                     auth_token TEXT NOT NULL UNIQUE,
+                    endpoint_url TEXT,
                     status TEXT NOT NULL CHECK(status IN ('REGISTERED', 'ACTIVE', 'SUSPENDED', 'SHUTDOWN')),
                     registered_at TEXT NOT NULL,
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id)
@@ -186,12 +188,12 @@ class LeagueDatabase:
         return None
 
     # Referee operations
-    def register_referee(self, referee_id: str, league_id: str, auth_token: str, registered_at: str):
+    def register_referee(self, referee_id: str, league_id: str, auth_token: str, registered_at: str, endpoint_url: str = None):
         """Register a new referee."""
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO referees (referee_id, league_id, auth_token, status, registered_at) VALUES (?, ?, ?, ?, ?)',
-                (referee_id, league_id, auth_token, 'REGISTERED', registered_at)
+                'INSERT INTO referees (referee_id, league_id, auth_token, endpoint_url, status, registered_at) VALUES (?, ?, ?, ?, ?, ?)',
+                (referee_id, league_id, auth_token, endpoint_url, 'REGISTERED', registered_at)
             )
 
     def get_referee(self, referee_id: str) -> Optional[Dict[str, Any]]:
@@ -220,12 +222,12 @@ class LeagueDatabase:
             )
 
     # Player operations
-    def register_player(self, player_id: str, league_id: str, auth_token: str, registered_at: str):
+    def register_player(self, player_id: str, league_id: str, auth_token: str, registered_at: str, endpoint_url: str = None):
         """Register a new player."""
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO players (player_id, league_id, auth_token, status, registered_at) VALUES (?, ?, ?, ?, ?)',
-                (player_id, league_id, auth_token, 'REGISTERED', registered_at)
+                'INSERT INTO players (player_id, league_id, auth_token, endpoint_url, status, registered_at) VALUES (?, ?, ?, ?, ?, ?)',
+                (player_id, league_id, auth_token, endpoint_url, 'REGISTERED', registered_at)
             )
 
     def get_player(self, player_id: str) -> Optional[Dict[str, Any]]:

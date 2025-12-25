@@ -76,60 +76,109 @@ pip install -e .
 
 ## Quick Start
 
-### 1. Configure the League
+### One-Command Demo
 
-Create a configuration file `config.yaml`:
-
-```yaml
-league:
-  league_id: "my-league-001"
-  game_type: "tic_tac_toe"
-
-timeouts:
-  move_timeout_ms: 30000
-  match_timeout_ms: 300000
-
-persistence:
-  database_path: "./data/league.db"
-  audit_log_path: "./data/audit.jsonl"
-```
-
-### 2. Start the League Manager
+The fastest way to see the system in action:
 
 ```bash
-python -m src.league_manager.main --host localhost --port 8000 --config config.yaml
+./run_simulation.sh
 ```
 
-### 3. Start a Referee
+This automated script will:
+- Start the League Manager (port 8000)
+- Start 2 Referees (ports 8001-8002)
+- Start 14 Players (ports 9001-9014) with mixed strategies
+- Register all agents and start the league
+- Execute 91 round-robin matches
+- Display live match progress
+- Show final standings with rankings
+- Wait for you to press Enter before cleanup
 
-```bash
-python -m src.referee.main --host localhost --port 8001 --league-url http://localhost:8000/mcp
+**What you'll see:**
+```
+[3/5] Starting Players...
+✓ Alice running (smart strategy, PID: 12345)
+✓ Bob running (smart strategy, PID: 12346)
+...
+
+📊 Monitoring league progress (updates every 5s)...
+16:53:09 📊 Match Progress: 6/91 completed
+16:53:14 📊 Match Progress: 12/91 completed
+...
+16:54:20 ✅ League Status: COMPLETED
+
+Final Results:
+✅ Matches completed: 91
+
+🏆 Final Standings:
+Rank   Player     Points   Record
+1      alice      27       9W-0D-4L
+2      bob        24       8W-0D-5L
+...
+
+✅ Simulation completed successfully!
+Press Enter to cleanup and exit...
 ```
 
-### 4. Start Players
+### Manual Setup
 
-```bash
-# Player 1
-python -m src.player.main --host localhost --port 9001 --league-url http://localhost:8000/mcp --player-id alice
+For detailed usage instructions and manual component startup, see [USAGE.md](docs/USAGE.md).
 
-# Player 2
-python -m src.player.main --host localhost --port 9002 --league-url http://localhost:8000/mcp --player-id bob
-```
+#### Basic Workflow
 
-### 5. Close Registration and Start the League
+1. **Start the League Manager**
+   ```bash
+   python -m src.league_manager.main --port 8000
+   ```
 
-Once all players and referees are registered, close registration and generate the schedule:
+2. **Start Referees and Players**
+   ```bash
+   # Start referees
+   python -m src.referee.main referee1 --port 8001
+   python -m src.referee.main referee2 --port 8002
 
-```bash
-# Use the admin API endpoint
-curl -X POST http://localhost:8000/admin/close-registration
-```
+   # Start players
+   python -m src.player.main alice --port 9001 --strategy smart
+   python -m src.player.main bob --port 9002 --strategy smart
+   python -m src.player.main charlie --port 9003 --strategy random
+   python -m src.player.main dave --port 9004 --strategy random
+   ```
 
-The league will automatically:
-- Generate a round-robin schedule
-- Assign matches to referees
-- Execute all matches
-- Compute and publish standings
+3. **Start the League via Admin API**
+
+   Once all agents have registered and signaled ready:
+   ```bash
+   curl -X POST http://localhost:8000/mcp \
+     -H "Content-Type: application/json" \
+     -d '{
+       "jsonrpc": "2.0",
+       "method": "league.handle",
+       "params": {
+         "envelope": {
+           "protocol": "league.v2",
+           "message_type": "ADMIN_START_LEAGUE_REQUEST",
+           "sender": "admin",
+           "timestamp": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",
+           "conversation_id": "'$(uuidgen || cat /proc/sys/kernel/random/uuid)'"
+         },
+         "payload": {}
+       },
+       "id": "start-1"
+     }'
+   ```
+
+   This transitions the league through: REGISTRATION → SCHEDULING → ACTIVE
+
+4. **Monitor Progress**
+   ```bash
+   # Check league status
+   curl http://localhost:8000/status
+
+   # View audit log
+   tail -f ./logs/audit.jsonl
+   ```
+
+For complete API documentation and advanced usage, see [USAGE.md](docs/USAGE.md).
 
 ## Configuration
 

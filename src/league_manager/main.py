@@ -4,10 +4,8 @@ This module provides the command-line interface for starting the League Manager.
 """
 
 import argparse
-import logging
 import sys
 import time
-from pathlib import Path
 
 from ..common.config import load_config
 from ..common.persistence import LeagueDatabase

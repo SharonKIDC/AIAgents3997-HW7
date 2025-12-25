@@ -159,6 +159,11 @@ class TestValidationFunctions:
         # Should not raise
         validate_sender_format('league_manager')
 
+    def test_validate_sender_format_admin(self):
+        """Test validating admin sender."""
+        # Should not raise
+        validate_sender_format('admin')
+
     def test_validate_sender_format_referee(self):
         """Test validating referee sender format."""
         validate_sender_format('referee:ref-001')

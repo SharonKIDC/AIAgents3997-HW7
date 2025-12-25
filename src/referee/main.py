@@ -66,7 +66,12 @@ def main():
             logger.error("Failed to register with League Manager")
             sys.exit(1)
 
-        logger.info("Referee is running. Press Ctrl+C to stop.")
+        # Send ready signal (agent is initialized and ready for match assignments)
+        if not server.send_ready():
+            logger.error("Failed to send ready signal to League Manager")
+            sys.exit(1)
+
+        logger.info("Referee is running and ACTIVE. Press Ctrl+C to stop.")
 
         # Keep running
         while True:
