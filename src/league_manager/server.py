@@ -5,30 +5,29 @@ JSON-RPC requests and coordinates between components.
 """
 
 import logging
-from typing import Dict, Any, Callable
 import uuid
+from typing import Any, Callable, Dict
 
-from ..common.transport import LeagueHTTPServer, LeagueHTTPClient
+from ..common.auth import AuthManager
+from ..common.config import ConfigManager
+from ..common.errors import ErrorCode, LeagueError, ValidationError
+from ..common.logging_utils import AuditLogger
+from ..common.persistence import LeagueDatabase
 from ..common.protocol import (
+    Envelope,
     JSONRPCRequest,
     JSONRPCResponse,
-    Envelope,
     MessageType,
-    create_success_response,
     create_error_response,
-    utc_now
+    create_success_response,
+    utc_now,
 )
-from ..common.auth import AuthManager
-from ..common.persistence import LeagueDatabase
-from ..common.config import ConfigManager
-from ..common.logging_utils import AuditLogger
-from ..common.errors import LeagueError, ValidationError, ErrorCode
-
-from .state import LeagueState, LeagueStatus
+from ..common.transport import LeagueHTTPClient, LeagueHTTPServer
+from .match_assigner import MatchAssigner
 from .registration import RegistrationHandler
 from .scheduler import RoundRobinScheduler
-from .match_assigner import MatchAssigner
 from .standings import StandingsEngine
+from .state import LeagueState, LeagueStatus
 
 logger = logging.getLogger(__name__)
 

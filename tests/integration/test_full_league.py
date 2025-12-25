@@ -5,12 +5,13 @@ through match execution to final standings.
 """
 
 import pytest
-from src.league_manager.state import LeagueState, LeagueStatus
+
+from src.common.auth import AgentType, AuthManager
+from src.common.protocol import Envelope, MessageType, generate_conversation_id, utc_now
 from src.league_manager.registration import RegistrationHandler
 from src.league_manager.scheduler import RoundRobinScheduler
 from src.league_manager.standings import StandingsEngine
-from src.common.auth import AuthManager, AgentType
-from src.common.protocol import Envelope, MessageType, utc_now, generate_conversation_id
+from src.league_manager.state import LeagueState, LeagueStatus
 
 
 @pytest.mark.integration
@@ -190,7 +191,7 @@ class TestFullLeagueWorkflow:
         registration_handler1.register_referee('ref-1', ref_envelope)
 
         # Create second instance (simulating restart)
-        auth_manager2 = AuthManager()
+        _auth_manager2 = AuthManager()  # noqa: F841
         league_state2 = LeagueState(league_id, temp_db, config_manager)
         league_state2.initialize()
 

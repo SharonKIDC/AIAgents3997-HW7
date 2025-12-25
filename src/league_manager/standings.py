@@ -4,10 +4,10 @@ This module implements deterministic standings calculation with
 tie-breaking rules as specified in the PRD.
 """
 
-import uuid
-from typing import Dict, Any
-from collections import defaultdict
 import logging
+import uuid
+from collections import defaultdict
+from typing import Any, Dict
 
 from ..common.persistence import LeagueDatabase
 from ..common.protocol import utc_now

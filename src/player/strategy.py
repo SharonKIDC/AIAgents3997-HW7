@@ -3,9 +3,9 @@
 This module provides strategy engines for making game moves.
 """
 
-import random
-from typing import Dict, Any, Tuple
 import logging
+import random
+from typing import Any, Dict, Tuple
 
 logger = logging.getLogger(__name__)
 

@@ -8,8 +8,8 @@ import sys
 import time
 
 from ..common.config import load_config
+from ..common.logging_utils import AuditLogger, setup_application_logging
 from ..common.persistence import LeagueDatabase
-from ..common.logging_utils import setup_application_logging, AuditLogger
 from .server import LeagueManagerServer
 
 

@@ -4,16 +4,16 @@ This module handles referee and player registration with the league.
 """
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
-from ..common.persistence import LeagueDatabase
-from ..common.auth import AuthManager, AgentType
-from ..common.protocol import Envelope, utc_now
+from ..common.auth import AgentType, AuthManager
 from ..common.errors import (
     DuplicateRegistrationError,
+    PreconditionFailedError,
     RegistrationClosedError,
-    PreconditionFailedError
 )
+from ..common.persistence import LeagueDatabase
+from ..common.protocol import Envelope, utc_now
 from .state import LeagueState
 
 logger = logging.getLogger(__name__)

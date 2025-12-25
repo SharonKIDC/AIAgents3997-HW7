@@ -5,7 +5,7 @@ enabling complete separation between communication and game logic.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class StrategyInterface(ABC):

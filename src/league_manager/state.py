@@ -4,12 +4,12 @@ This module manages the lifecycle state of the league and provides
 centralized access to league configuration and status.
 """
 
-from enum import Enum
-from typing import Dict, Any
 import logging
+from enum import Enum
+from typing import Any, Dict
 
-from ..common.persistence import LeagueDatabase
 from ..common.config import ConfigManager
+from ..common.persistence import LeagueDatabase
 from ..common.protocol import utc_now
 
 logger = logging.getLogger(__name__)

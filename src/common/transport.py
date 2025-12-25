@@ -4,22 +4,22 @@ This module provides HTTP server and client implementations for
 JSON-RPC communication between league agents.
 """
 
+import http.client
 import json
 import logging
-from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Callable, Dict, Any, Optional
-from urllib.parse import urlparse
-import http.client
 import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Callable, Dict, Optional
+from urllib.parse import urlparse
 
+from .errors import ErrorCode, LeagueError, ProtocolError
 from .protocol import (
+    JSONRPC_VERSION,
+    Envelope,
     JSONRPCRequest,
     JSONRPCResponse,
-    Envelope,
     create_error_response,
-    JSONRPC_VERSION
 )
-from .errors import LeagueError, ProtocolError, ErrorCode
 
 logger = logging.getLogger(__name__)
 

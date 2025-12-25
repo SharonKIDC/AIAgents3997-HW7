@@ -4,18 +4,14 @@ This module implements the league.v2 protocol envelope structure,
 message type definitions, and validation rules as specified in the PRD.
 """
 
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from enum import Enum
-from typing import Dict, Any, Optional
 import re
 import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, Optional
 
-from .errors import (
-    ValidationError,
-    ErrorCode,
-    ProtocolError
-)
+from .errors import ErrorCode, ProtocolError, ValidationError
 
 
 class MessageType(str, Enum):

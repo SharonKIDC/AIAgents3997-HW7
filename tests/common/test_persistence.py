@@ -3,8 +3,6 @@
 This module tests all database operations for the league system.
 """
 
-import pytest
-from src.common.persistence import LeagueDatabase
 from src.common.protocol import utc_now
 
 

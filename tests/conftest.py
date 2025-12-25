@@ -3,14 +3,15 @@
 This module provides common fixtures used across the test suite.
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
-from src.common.persistence import LeagueDatabase
-from src.common.auth import AuthManager, AgentType
+import pytest
+
+from src.common.auth import AgentType, AuthManager
 from src.common.config import ConfigManager
+from src.common.persistence import LeagueDatabase
 
 
 @pytest.fixture
@@ -160,7 +161,7 @@ def sample_envelope_data():
     Returns:
         dict: Valid envelope dictionary
     """
-    from src.common.protocol import utc_now, generate_conversation_id
+    from src.common.protocol import generate_conversation_id, utc_now
 
     return {
         'protocol': 'league.v2',
@@ -178,7 +179,7 @@ def sample_jsonrpc_request():
     Returns:
         dict: Valid JSON-RPC request
     """
-    from src.common.protocol import utc_now, generate_conversation_id, generate_message_id
+    from src.common.protocol import generate_conversation_id, generate_message_id, utc_now
 
     return {
         'jsonrpc': '2.0',

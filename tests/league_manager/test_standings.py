@@ -4,8 +4,9 @@ This module tests standings calculation and tie-breaking rules.
 """
 
 import pytest
-from src.league_manager.standings import StandingsEngine
+
 from src.common.protocol import utc_now
+from src.league_manager.standings import StandingsEngine
 
 
 class TestStandingsEngine:

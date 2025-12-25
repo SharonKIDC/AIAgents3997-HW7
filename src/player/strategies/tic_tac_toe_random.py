@@ -4,9 +4,9 @@ This module implements a random strategy that picks
 any valid move at random.
 """
 
-import random
-from typing import Dict, Any
 import logging
+import random
+from typing import Any, Dict
 
 from ...common.strategy_interface import StrategyInterface
 

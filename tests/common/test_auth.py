@@ -4,7 +4,8 @@ This module tests token generation, validation, and authorization checks.
 """
 
 import pytest
-from src.common.auth import AuthManager, AgentType
+
+from src.common.auth import AgentType
 from src.common.errors import AuthenticationError, AuthorizationError
 
 

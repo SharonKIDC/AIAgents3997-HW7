@@ -3,11 +3,13 @@
 This module tests match execution orchestration.
 """
 
+from unittest.mock import Mock
+
 import pytest
-from unittest.mock import Mock, MagicMock
-from src.referee.match_executor import MatchExecutor
-from src.common.transport import LeagueHTTPClient
+
 from src.common.errors import OperationalError
+from src.common.transport import LeagueHTTPClient
+from src.referee.match_executor import MatchExecutor
 
 
 class TestMatchExecutor:

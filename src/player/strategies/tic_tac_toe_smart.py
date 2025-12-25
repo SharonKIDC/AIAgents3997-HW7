@@ -4,9 +4,9 @@ This module implements a smart strategy that tries to win,
 blocks opponent wins, and makes strategic moves.
 """
 
-import random
-from typing import Dict, Any, Tuple, Optional
 import logging
+import random
+from typing import Any, Dict, Optional, Tuple
 
 from ...common.strategy_interface import StrategyInterface
 

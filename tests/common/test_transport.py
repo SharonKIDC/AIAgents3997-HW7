@@ -4,17 +4,14 @@ This module tests the HTTP server and client implementations
 for JSON-RPC communication.
 """
 
-import pytest
 import json
-import time
 import threading
-from unittest.mock import Mock, patch, MagicMock
+import time
+from unittest.mock import Mock
 
-from src.common.transport import (
-    LeagueHTTPServer,
-    LeagueHTTPClient,
-    LeagueHTTPHandler
-)
+import pytest
+
+from src.common.errors import ErrorCode, ProtocolError
 from src.common.protocol import (
     Envelope,
     JSONRPCRequest,
@@ -22,10 +19,9 @@ from src.common.protocol import (
     MessageType,
     create_success_response,
     generate_conversation_id,
-    generate_message_id,
-    utc_now
+    utc_now,
 )
-from src.common.errors import ProtocolError, ErrorCode
+from src.common.transport import LeagueHTTPClient, LeagueHTTPServer
 
 
 class TestLeagueHTTPServer:
@@ -316,7 +312,7 @@ class TestEndToEndCommunication:
 
             # Extract envelope and payload
             envelope_data = request.params['envelope']
-            payload = request.params['payload']
+            _payload = request.params['payload']  # noqa: F841
 
             # Create response
             response_envelope = Envelope(

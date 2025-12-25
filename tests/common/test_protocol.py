@@ -4,31 +4,27 @@ This module tests the protocol layer including envelope validation,
 message types, and JSON-RPC structures.
 """
 
-import pytest
-from datetime import datetime
 import uuid
 
+import pytest
+
+from src.common.errors import ErrorCode, ProtocolError, ValidationError
 from src.common.protocol import (
+    JSONRPC_VERSION,
+    MCP_METHOD,
+    PROTOCOL_VERSION,
     Envelope,
-    MessageType,
     JSONRPCRequest,
     JSONRPCResponse,
-    validate_sender_format,
-    validate_timestamp,
-    validate_uuid,
-    create_success_response,
+    MessageType,
     create_error_response,
+    create_success_response,
     generate_conversation_id,
     generate_message_id,
     utc_now,
-    PROTOCOL_VERSION,
-    JSONRPC_VERSION,
-    MCP_METHOD
-)
-from src.common.errors import (
-    ValidationError,
-    ProtocolError,
-    ErrorCode
+    validate_sender_format,
+    validate_timestamp,
+    validate_uuid,
 )
 
 

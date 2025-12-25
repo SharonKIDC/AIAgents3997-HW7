@@ -3,11 +3,11 @@
 This module handles loading and providing access to league configuration.
 """
 
-import yaml
-import json
-from pathlib import Path
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional
+
+import yaml
 
 from .errors import ConfigurationError
 

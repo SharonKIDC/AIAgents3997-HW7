@@ -6,13 +6,13 @@ protocol messages in an append-only format.
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
-from datetime import datetime
 import threading
 import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
-from .protocol import Envelope, JSONRPCRequest, JSONRPCResponse
+from .protocol import JSONRPCRequest, JSONRPCResponse
 
 
 class AuditLogger:

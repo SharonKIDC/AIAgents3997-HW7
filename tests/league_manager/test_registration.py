@@ -4,15 +4,16 @@ This module tests referee and player registration flows.
 """
 
 import pytest
-from src.league_manager.registration import RegistrationHandler
-from src.league_manager.state import LeagueState, LeagueStatus
-from src.common.auth import AuthManager, AgentType
-from src.common.protocol import Envelope, MessageType, utc_now, generate_conversation_id
+
+from src.common.auth import AgentType
 from src.common.errors import (
     DuplicateRegistrationError,
+    PreconditionFailedError,
     RegistrationClosedError,
-    PreconditionFailedError
 )
+from src.common.protocol import Envelope, MessageType, generate_conversation_id, utc_now
+from src.league_manager.registration import RegistrationHandler
+from src.league_manager.state import LeagueState, LeagueStatus
 
 
 class TestRegistrationHandler:
@@ -110,25 +111,27 @@ class TestRegistrationHandler:
     def test_multiple_registrations(self, registration_handler, sample_referee_envelope):
         """Test registering multiple referees and players."""
         # Register referees
-        ref_envelope = lambda ref_id: Envelope(
-            protocol='league.v2',
-            message_type=MessageType.REGISTER_REFEREE_REQUEST.value,
-            sender=f'referee:{ref_id}',
-            timestamp=utc_now(),
-            conversation_id=generate_conversation_id()
-        )
+        def ref_envelope(ref_id):
+            return Envelope(
+                protocol='league.v2',
+                message_type=MessageType.REGISTER_REFEREE_REQUEST.value,
+                sender=f'referee:{ref_id}',
+                timestamp=utc_now(),
+                conversation_id=generate_conversation_id()
+            )
 
         for ref_id in ['ref-1', 'ref-2']:
             registration_handler.register_referee(ref_id, ref_envelope(ref_id))
 
         # Register players
-        player_envelope = lambda player_id: Envelope(
-            protocol='league.v2',
-            message_type=MessageType.REGISTER_PLAYER_REQUEST.value,
-            sender=f'player:{player_id}',
-            timestamp=utc_now(),
-            conversation_id=generate_conversation_id()
-        )
+        def player_envelope(player_id):
+            return Envelope(
+                protocol='league.v2',
+                message_type=MessageType.REGISTER_PLAYER_REQUEST.value,
+                sender=f'player:{player_id}',
+                timestamp=utc_now(),
+                conversation_id=generate_conversation_id()
+            )
 
         for player_id in ['alice', 'bob', 'charlie']:
             result = registration_handler.register_player(player_id, player_envelope(player_id))

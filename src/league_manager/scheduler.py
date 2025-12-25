@@ -4,13 +4,12 @@ This module implements deterministic round-robin scheduling as specified
 in ADR-002, ensuring each player plays every other player exactly once.
 """
 
-import uuid
-from typing import List, Dict, Tuple, Any
 import itertools
 import logging
+import uuid
+from typing import Any, Dict, List, Tuple
 
 from ..common.persistence import LeagueDatabase
-from ..common.protocol import utc_now
 
 logger = logging.getLogger(__name__)
 

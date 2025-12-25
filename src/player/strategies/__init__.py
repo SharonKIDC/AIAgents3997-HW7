@@ -5,8 +5,8 @@ strategies for easy importing and discovery.
 """
 
 from ...common.registry import StrategyRegistry
-from .tic_tac_toe_smart import TicTacToeSmartStrategy
 from .tic_tac_toe_random import TicTacToeRandomStrategy
+from .tic_tac_toe_smart import TicTacToeSmartStrategy
 
 # Create global strategy registry
 strategy_registry = StrategyRegistry()

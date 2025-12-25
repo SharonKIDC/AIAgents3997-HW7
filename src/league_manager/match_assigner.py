@@ -4,12 +4,12 @@ This module handles assigning pending matches to available referees.
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
+from ..common.errors import ErrorCode, OperationalError
 from ..common.persistence import LeagueDatabase
-from ..common.protocol import utc_now, generate_conversation_id, Envelope, MessageType
+from ..common.protocol import Envelope, MessageType, generate_conversation_id, utc_now
 from ..common.transport import LeagueHTTPClient
-from ..common.errors import OperationalError, ErrorCode
 
 logger = logging.getLogger(__name__)
 

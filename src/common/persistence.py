@@ -4,12 +4,12 @@ This module provides SQLite database access and abstracts all
 database operations for the league system.
 """
 
-import sqlite3
 import json
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
-from contextlib import contextmanager
+import sqlite3
 import threading
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from .errors import DatabaseError
 

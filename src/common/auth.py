@@ -3,10 +3,10 @@
 This module handles token issuance, validation, and authorization checks.
 """
 
-import uuid
-from typing import Dict, Optional, Set
-from enum import Enum
 import threading
+import uuid
+from enum import Enum
+from typing import Dict
 
 from .errors import AuthenticationError, AuthorizationError
 

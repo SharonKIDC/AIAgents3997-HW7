@@ -4,8 +4,8 @@ This module provides a registry mechanism for discovering and loading
 strategies and games at runtime, enabling true pluggability.
 """
 
-from typing import Dict, Type, Optional
 import logging
+from typing import Dict, Optional, Type
 
 logger = logging.getLogger(__name__)
 

@@ -67,6 +67,8 @@ dev = [
     "mypy>=1.5.0",
     "pylint>=3.0.0",
     "isort>=5.12.0",
+    "ruff>=0.1.0",
+    "bandit>=1.7.0",
     "matplotlib>=3.7.0",
     "build>=0.10.0",
     "setuptools>=68.0",
@@ -99,3 +101,17 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E741",  # Allow ambiguous variable names (e.g., 'O' for tic-tac-toe)
+    "E501",  # Allow lines longer than 120 chars (already set in line-length)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["F401"]  # Allow unused imports in tests

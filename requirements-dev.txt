@@ -14,6 +14,10 @@ flake8>=6.1.0
 mypy>=1.5.0
 pylint>=3.0.0
 isort>=5.12.0
+ruff>=0.1.0
+
+# Security scanning
+bandit>=1.7.0
 
 # Visualization and analysis
 matplotlib>=3.7.0

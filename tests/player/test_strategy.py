@@ -4,9 +4,9 @@ This module tests player move computation strategies.
 """
 
 import pytest
-from src.player.strategies.tic_tac_toe_smart import TicTacToeSmartStrategy
+
 from src.player.strategies.tic_tac_toe_random import TicTacToeRandomStrategy
-from src.player.strategies import get_strategy
+from src.player.strategies.tic_tac_toe_smart import TicTacToeSmartStrategy
 
 # Backward compatibility aliases
 TicTacToeStrategy = TicTacToeSmartStrategy

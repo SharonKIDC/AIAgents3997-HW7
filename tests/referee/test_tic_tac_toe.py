@@ -3,8 +3,7 @@
 This module tests the game engine for Tic Tac Toe.
 """
 
-import pytest
-from src.referee.games.tic_tac_toe import TicTacToeGame, Mark, GameOutcome
+from src.referee.games.tic_tac_toe import GameOutcome, Mark, TicTacToeGame
 
 
 def create_game(player_x='alice', player_o='bob'):

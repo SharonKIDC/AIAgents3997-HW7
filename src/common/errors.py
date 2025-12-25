@@ -5,7 +5,7 @@ the league system, ensuring consistent error handling and reporting.
 """
 
 from enum import IntEnum
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 class ErrorCode(IntEnum):

@@ -4,8 +4,9 @@ This module tests deterministic round-robin scheduling.
 """
 
 import pytest
-from src.league_manager.scheduler import RoundRobinScheduler
+
 from src.common.protocol import utc_now
+from src.league_manager.scheduler import RoundRobinScheduler
 
 
 class TestRoundRobinScheduler:
