@@ -1,6 +1,10 @@
 #!/bin/bash
 # Reset League - Clear all state and start fresh
 
+# Change to project root directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR/.."
+
 echo "🧹 Resetting Agent League System..."
 
 # Stop any running instances (optional)

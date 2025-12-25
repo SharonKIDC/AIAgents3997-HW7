@@ -13,7 +13,7 @@ For a quick end-to-end demonstration, use the provided scripts:
 
 ```bash
 # Run complete simulation (starts everything, activates league, monitors progress)
-./run_simulation.sh
+./scripts/run_simulation.sh
 
 # The script will:
 # 1. Start League Manager on port 8000
@@ -55,7 +55,7 @@ Press Enter to cleanup and exit...
 
 To manually reset the league between runs:
 ```bash
-./reset_league.sh
+./scripts/reset_league.sh
 
 # This removes:
 # - Database files (data/league.db)

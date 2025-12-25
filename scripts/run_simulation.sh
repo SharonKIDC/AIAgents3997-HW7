@@ -5,7 +5,7 @@
 set -e  # Exit on error
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."  # Change to project root
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -31,7 +31,7 @@ cleanup() {
 
     # Reset league state
     echo -e "\n${YELLOW}🧹 Resetting league state...${NC}"
-    ./reset_league.sh
+    "$SCRIPT_DIR/reset_league.sh"
     echo -e "${GREEN}✓ Cleanup complete${NC}"
 }
 

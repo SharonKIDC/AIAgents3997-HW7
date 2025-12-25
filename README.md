@@ -81,7 +81,7 @@ pip install -e .
 The fastest way to see the system in action:
 
 ```bash
-./run_simulation.sh
+./scripts/run_simulation.sh
 ```
 
 This automated script will:
