@@ -41,7 +41,7 @@ The system consists of three main components:
    - Respond to move requests
    - Query standings
 
-For detailed architecture documentation, see [docs/Architecture.md](/root/Git/AIAgents3997-HW7/docs/Architecture.md).
+For detailed architecture documentation, see [docs/Architecture.md](docs/Architecture.md).
 
 ## Installation
 
@@ -197,7 +197,7 @@ For complete API documentation and advanced usage, see [USAGE.md](docs/USAGE.md)
 - **database_path**: Path to SQLite database file
 - **audit_log_path**: Path to JSON Lines audit log file
 
-For complete configuration options, see [USAGE.md](/root/Git/AIAgents3997-HW7/USAGE.md).
+For complete configuration options, see [USAGE.md](docs/USAGE.md).
 
 ## Running the League
 
@@ -247,7 +247,7 @@ pytest --cov=src --cov-report=html
 - **tests/player/**: Player strategy tests
 - **tests/integration/**: End-to-end league workflow tests
 
-See [TEST_SUMMARY.md](/root/Git/AIAgents3997-HW7/TEST_SUMMARY.md) for detailed test coverage information.
+See [TEST_SUMMARY.md](TEST_SUMMARY.md) for detailed test coverage information.
 
 ## Protocol
 
@@ -274,7 +274,7 @@ The system uses JSON-RPC 2.0 over HTTP with a custom protocol envelope:
 }
 ```
 
-For complete protocol specification, see [docs/PRD.md](/root/Git/AIAgents3997-HW7/docs/PRD.md).
+For complete protocol specification, see [docs/PRD.md](docs/PRD.md).
 
 ## Troubleshooting
 
@@ -368,7 +368,7 @@ To add support for a new game:
 
 3. Add comprehensive tests
 
-See [ADR-003: Game-Agnostic Referee Pattern](/root/Git/AIAgents3997-HW7/docs/ADRs/003-game-agnostic-referee.md) for details.
+See [ADR-003: Game-Agnostic Referee Pattern](docs/ADRs/003-game-agnostic-referee.md) for details.
 
 ## License
 

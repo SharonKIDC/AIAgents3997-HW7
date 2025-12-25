@@ -1,10 +1,10 @@
 # Agent League System - Usage Guide
 
-This guide explains how to use the Agent League System once it's installed. For installation instructions, see [README.md](/root/Git/AIAgents3997-HW7/README.md).
+This guide explains how to use the Agent League System once it's installed. For installation instructions, see [README.md](../README.md).
 
 ## Prerequisites
 
-- System installed and dependencies satisfied (see [README.md](/root/Git/AIAgents3997-HW7/README.md#installation))
+- System installed and dependencies satisfied (see [README.md](../README.md#installation))
 - Python virtual environment activated (if using one)
 
 ## Quick Start with Simulation Scripts
