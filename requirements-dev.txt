@@ -2,19 +2,21 @@
 # Include production requirements
 -r requirements.txt
 
-# Development tools
+# Testing framework
 pytest>=7.4.0
 pytest-cov>=4.1.0
-black>=23.7.0
-flake8>=6.1.0
-mypy>=1.5.0
-
-# Additional testing utilities
 pytest-mock>=3.10.0
 pytest-timeout>=2.1.0
 
+# Code quality tools
+black>=23.7.0
+flake8>=6.1.0
+mypy>=1.5.0
+pylint>=3.0.0
+isort>=5.12.0
+
 # Visualization and analysis
-matplotlib>=3.10.0
+matplotlib>=3.7.0
 
 # Build tools
 build>=0.10.0
