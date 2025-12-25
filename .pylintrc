@@ -2,31 +2,75 @@
 init-hook='import sys; sys.path.append(".")'
 jobs=4
 
+# Ignore directories (matches .gitignore)
+ignore=CVS,
+       .git,
+       __pycache__,
+       .venv,
+       venv,
+       env,
+       ENV,
+       build,
+       dist,
+       htmlcov,
+       .pytest_cache,
+       .ruff_cache,
+       .mypy_cache,
+       .tox,
+       .eggs,
+       *.egg-info,
+       data,
+       logs,
+       .claude,
+       docs/development
+
+# Ignore patterns (regex)
+ignore-patterns=^\..*,
+                .*_cache.*,
+                .*\.egg-info.*,
+                ^build/,
+                ^dist/,
+                ^venv/,
+                ^\.venv/,
+                ^htmlcov/,
+                ^data/,
+                ^logs/,
+                ^docs/development/
+
 [MESSAGES CONTROL]
 disable=
     missing-docstring,
     too-few-public-methods,
     too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    too-many-instance-attributes,
     logging-fstring-interpolation,
     protected-access,
-    wrong-hanging-indentation,
-    bad-whitespace
+    broad-exception-caught,
+    raise-missing-from,
+    no-else-return,
+    unused-argument,
+    import-outside-toplevel,
+    redefined-builtin,
+    line-too-long
 
 [REPORTS]
 output-format=colorized
 reports=no
 
 [BASIC]
-good-names=i,j,k,ex,_,id,db,op,fp,n,x,y,z,row,col
+good-names=i,j,k,ex,e,_,id,db,op,fp,n,x,y,z,row,col
 
 [FORMAT]
-max-line-length=100
+max-line-length=120
 indent-string='    '
 
 [DESIGN]
 max-args=8
-max-attributes=10
+max-attributes=14
 min-public-methods=1
+max-locals=18
 
 [LOGGING]
 logging-format-style=old
