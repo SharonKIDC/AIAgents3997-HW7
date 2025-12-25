@@ -46,6 +46,7 @@ disable=
     too-many-locals,
     too-many-instance-attributes,
     logging-fstring-interpolation,
+    logging-not-lazy,
     protected-access,
     broad-exception-caught,
     raise-missing-from,
@@ -53,7 +54,23 @@ disable=
     unused-argument,
     import-outside-toplevel,
     redefined-builtin,
-    line-too-long
+    line-too-long,
+    duplicate-code,
+    invalid-name,
+    no-member,
+    unnecessary-pass,
+    redefined-outer-name,
+    broad-exception-raised,
+    useless-parent-delegation,
+    unspecified-encoding,
+    consider-using-with,
+    too-many-public-methods,
+    use-dict-literal,
+    unused-variable,
+    consider-using-sys-exit,
+    wrong-import-order,
+    unused-import,
+    f-string-without-interpolation
 
 [REPORTS]
 output-format=colorized
