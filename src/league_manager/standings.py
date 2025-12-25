@@ -98,20 +98,25 @@ class StandingsEngine:
                 'matches_played': stats['matches_played']
             })
 
-        # Include players with no matches
+        # Include players with no matches (sorted by player_id for determinism)
         all_players = self.database.get_all_players(league_id)
+        players_without_matches = []
         for player in all_players:
             player_id = player['player_id']
             if player_id not in player_stats:
-                rankings.append({
-                    'rank': len(rankings) + 1,
-                    'player_id': player_id,
-                    'points': 0,
-                    'wins': 0,
-                    'draws': 0,
-                    'losses': 0,
-                    'matches_played': 0
-                })
+                players_without_matches.append(player_id)
+
+        # Sort players without matches alphabetically
+        for player_id in sorted(players_without_matches):
+            rankings.append({
+                'rank': len(rankings) + 1,
+                'player_id': player_id,
+                'points': 0,
+                'wins': 0,
+                'draws': 0,
+                'losses': 0,
+                'matches_played': 0
+            })
 
         standings_data = {
             'league_id': league_id,

@@ -289,6 +289,11 @@ class LeagueHTTPClient:
 
             return response_data['result']
 
+        except (ConnectionRefusedError, ConnectionError, OSError) as e:
+            raise ProtocolError(
+                ErrorCode.COMMUNICATION_ERROR,
+                f"Connection error: {str(e)}"
+            )
         except http.client.HTTPException as e:
             raise ProtocolError(
                 ErrorCode.INTERNAL_ERROR,

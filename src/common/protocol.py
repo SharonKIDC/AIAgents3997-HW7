@@ -287,8 +287,8 @@ class JSONRPCResponse:
             response["result"] = self.result
         if self.error is not None:
             response["error"] = self.error
-        if self.id is not None:
-            response["id"] = self.id
+        # Always include id field (per JSON-RPC 2.0 spec)
+        response["id"] = self.id
         return response
 
 
