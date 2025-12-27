@@ -111,7 +111,9 @@ class ConfigManager:
         """
         config_path = self.config_dir / filename
         if not config_path.exists():
-            raise ConfigurationError(f"Configuration file not found: {config_path}", path=str(config_path))
+            raise ConfigurationError(
+                f"Configuration file not found: {config_path}", path=str(config_path)
+            )
 
         try:
             with open(config_path, "r", encoding="utf-8") as f:
@@ -132,7 +134,9 @@ class ConfigManager:
             scheduling_data = data.get("scheduling", {})
             self.scheduling = SchedulingConfig(
                 algorithm=scheduling_data.get("algorithm", "round_robin"),
-                concurrent_matches_per_round=scheduling_data.get("concurrent_matches_per_round", True),
+                concurrent_matches_per_round=scheduling_data.get(
+                    "concurrent_matches_per_round", True
+                ),
             )
 
             # Parse timeout settings
@@ -147,14 +151,17 @@ class ConfigManager:
             # Parse retry settings
             retry_data = data.get("retries", {})
             self.retries = RetryConfig(
-                max_attempts=retry_data.get("max_attempts", 3), backoff_ms=retry_data.get("backoff_ms", 1000)
+                max_attempts=retry_data.get("max_attempts", 3),
+                backoff_ms=retry_data.get("backoff_ms", 1000),
             )
 
             # Parse logging settings
             logging_data = data.get("logging", {})
             self.logging = LoggingConfig(
                 audit_log_path=logging_data.get("audit_log_path", "./logs/audit.jsonl"),
-                application_log_path=logging_data.get("application_log_path", "./logs/league_manager.log"),
+                application_log_path=logging_data.get(
+                    "application_log_path", "./logs/league_manager.log"
+                ),
                 log_level=logging_data.get("log_level", "INFO"),
             )
 
@@ -163,9 +170,13 @@ class ConfigManager:
             self.database = DatabaseConfig(path=db_data.get("path", "./data/league.db"))
 
         except yaml.YAMLError as e:
-            raise ConfigurationError(f"Invalid YAML in configuration: {str(e)}", path=str(config_path)) from e
+            raise ConfigurationError(
+                f"Invalid YAML in configuration: {str(e)}", path=str(config_path)
+            ) from e
         except Exception as e:
-            raise ConfigurationError(f"Error loading configuration: {str(e)}", path=str(config_path)) from e
+            raise ConfigurationError(
+                f"Error loading configuration: {str(e)}", path=str(config_path)
+            ) from e
 
     def load_game_registry(self, filename: str = "game_registry.yaml"):
         """Load game registry configuration.
@@ -206,7 +217,9 @@ class ConfigManager:
                 self.games[game.game_type] = game
 
         except Exception as e:
-            raise ConfigurationError(f"Error loading game registry: {str(e)}", path=str(config_path)) from e
+            raise ConfigurationError(
+                f"Error loading game registry: {str(e)}", path=str(config_path)
+            ) from e
 
     def get_game_config(self, game_type: str) -> Optional[GameConfig]:
         """Get configuration for a specific game type.

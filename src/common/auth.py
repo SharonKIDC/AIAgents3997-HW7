@@ -92,7 +92,9 @@ class AuthManager:
 
         if sender != expected_sender:
             raise AuthorizationError(
-                f"Sender mismatch: expected {expected_sender}, got {sender}", expected=expected_sender, actual=sender
+                f"Sender mismatch: expected {expected_sender}, got {sender}",
+                expected=expected_sender,
+                actual=sender,
             )
 
     def invalidate_token(self, token: str) -> None:

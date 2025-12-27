@@ -41,7 +41,13 @@ class LeagueManagerServer:
     """Main League Manager server coordinating all league operations."""
 
     def __init__(
-        self, host: str, port: int, *, config: ConfigManager, database: LeagueDatabase, audit_logger: AuditLogger
+        self,
+        host: str,
+        port: int,
+        *,
+        config: ConfigManager,
+        database: LeagueDatabase,
+        audit_logger: AuditLogger,
     ):
         """Initialize the League Manager server.
 
@@ -63,7 +69,9 @@ class LeagueManagerServer:
         self.league_state = LeagueState(
             config.league.league_id if config.league else "default-league", database, config
         )
-        self.registration_handler = RegistrationHandler(self.league_state, database, self.auth_manager)
+        self.registration_handler = RegistrationHandler(
+            self.league_state, database, self.auth_manager
+        )
         self.scheduler = RoundRobinScheduler(database)
         self.http_client = LeagueHTTPClient()
         self.match_assigner = MatchAssigner(database, self.http_client)
@@ -91,7 +99,9 @@ class LeagueManagerServer:
         # Start HTTP server
         self.http_server.start()
         logger.info("League Manager started on %s:%s", self.host, self.port)
-        logger.info("League ID: %s, Status: %s", self.league_state.league_id, self.league_state.status)
+        logger.info(
+            "League ID: %s, Status: %s", self.league_state.league_id, self.league_state.status
+        )
 
     def stop(self):
         """Stop the League Manager server."""
@@ -151,7 +161,9 @@ class LeagueManagerServer:
             response = create_success_response(response_envelope, response_payload, request.id)
 
             # Log response
-            self.audit_logger.log_response(response, "league_manager", envelope.sender, envelope.conversation_id)
+            self.audit_logger.log_response(
+                response, "league_manager", envelope.sender, envelope.conversation_id
+            )
 
             return response
 
@@ -164,7 +176,9 @@ class LeagueManagerServer:
         except Exception as e:  # pylint: disable=broad-exception-caught
             return create_internal_error_response(e, request.id)
 
-    def _handle_register_referee(self, envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_register_referee(
+        self, envelope: Envelope, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle referee registration request."""
         referee_id = payload.get("referee_id")
         if not referee_id:
@@ -173,7 +187,9 @@ class LeagueManagerServer:
         endpoint_url = payload.get("endpoint_url")
         return self.registration_handler.register_referee(referee_id, envelope, endpoint_url)
 
-    def _handle_register_player(self, envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_register_player(
+        self, envelope: Envelope, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle player registration request."""
         player_id = payload.get("player_id")
         if not player_id:
@@ -206,7 +222,12 @@ class LeagueManagerServer:
         # Store result
         result_id = f"result-{uuid.uuid4()}"
         self.database.store_result(
-            result_id, match_id, outcome=outcome, points=points, game_metadata=game_metadata, reported_at=utc_now()
+            result_id,
+            match_id,
+            outcome=outcome,
+            points=points,
+            game_metadata=game_metadata,
+            reported_at=utc_now(),
         )
 
         # Update match status
@@ -235,7 +256,9 @@ class LeagueManagerServer:
 
         return {"status": "acknowledged", "match_id": match_id}
 
-    def _handle_query_standings(self, _envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_query_standings(
+        self, _envelope: Envelope, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle standings query."""
         round_id = payload.get("round_id")
 
@@ -255,7 +278,9 @@ class LeagueManagerServer:
         # Parse sender to determine agent type and ID
         sender = envelope.sender
         if ":" not in sender:
-            raise ValidationError(f"Invalid sender format for ready signal: {sender}", field="sender")
+            raise ValidationError(
+                f"Invalid sender format for ready signal: {sender}", field="sender"
+            )
 
         agent_type, agent_id = sender.split(":", 1)
 
@@ -279,11 +304,20 @@ class LeagueManagerServer:
             logger.info("Player %s is now ACTIVE", agent_id)
 
         else:
-            raise ValidationError(f"Invalid agent type for ready signal: {agent_type}", field="sender")
+            raise ValidationError(
+                f"Invalid agent type for ready signal: {agent_type}", field="sender"
+            )
 
-        return {"status": "acknowledged", "agent_id": agent_id, "agent_type": agent_type, "agent_state": "ACTIVE"}
+        return {
+            "status": "acknowledged",
+            "agent_id": agent_id,
+            "agent_type": agent_type,
+            "agent_state": "ACTIVE",
+        }
 
-    def _handle_admin_start_league(self, _envelope: Envelope, _payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_admin_start_league(
+        self, _envelope: Envelope, _payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle admin request to start the league.
 
         This closes registration, generates schedule, and transitions to ACTIVE.
@@ -306,7 +340,9 @@ class LeagueManagerServer:
             },
         )
 
-    def _handle_admin_get_status(self, _envelope: Envelope, _payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_admin_get_status(
+        self, _envelope: Envelope, _payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle admin request to get detailed league status."""
         return {
             "league_id": self.league_state.league_id,
@@ -354,9 +390,15 @@ class LeagueManagerServer:
 
         # Generate schedule
         game_type = "tic_tac_toe"  # Default game type
-        schedule = self.scheduler.generate_schedule(self.league_state.league_id, player_ids, game_type)
+        schedule = self.scheduler.generate_schedule(
+            self.league_state.league_id, player_ids, game_type
+        )
 
-        logger.info("Generated schedule: %s rounds, %s matches", schedule["total_rounds"], schedule["total_matches"])
+        logger.info(
+            "Generated schedule: %s rounds, %s matches",
+            schedule["total_rounds"],
+            schedule["total_matches"],
+        )
 
         # NOTE: Agents must send AGENT_READY_REQUEST to transition from REGISTERED to ACTIVE
         # This ensures only operational agents participate in matches
@@ -375,7 +417,10 @@ class LeagueManagerServer:
             active_referees = [r for r in referees if r["status"] == "ACTIVE"]
 
             if len(active_referees) > 0:
-                logger.info("Found %s active referee(s). Proceeding with match assignment.", len(active_referees))
+                logger.info(
+                    "Found %s active referee(s). Proceeding with match assignment.",
+                    len(active_referees),
+                )
                 break
 
             logger.debug("Waiting for referees to signal ready... (%.1fs elapsed)", waited)
@@ -383,7 +428,9 @@ class LeagueManagerServer:
             waited += poll_interval
 
         if waited >= max_wait_seconds:
-            logger.warning("Timeout waiting for referees to signal ready after %ss", max_wait_seconds)
+            logger.warning(
+                "Timeout waiting for referees to signal ready after %ss", max_wait_seconds
+            )
 
         # Assign matches
         self.match_assigner.assign_pending_matches(self.league_state.league_id)

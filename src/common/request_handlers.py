@@ -58,7 +58,9 @@ def create_internal_error_response(error: Exception, request_id: str) -> JSONRPC
         JSON-RPC error response
     """
     logger.exception("Unexpected error handling request")
-    return create_error_response(ErrorCode.INTERNAL_ERROR, f"Internal error: {str(error)}", request_id=request_id)
+    return create_error_response(
+        ErrorCode.INTERNAL_ERROR, f"Internal error: {str(error)}", request_id=request_id
+    )
 
 
 def handle_request_errors(

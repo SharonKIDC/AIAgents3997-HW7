@@ -310,7 +310,11 @@ class TestEndToEndCommunication:
                 conversation_id=envelope_data["conversation_id"],
             )
 
-            response_payload = {"status": "registered", "auth_token": "test-token-123", "league_id": "league-001"}
+            response_payload = {
+                "status": "registered",
+                "auth_token": "test-token-123",
+                "league_id": "league-001",
+            }
 
             return create_success_response(response_envelope, response_payload, request.id)
 

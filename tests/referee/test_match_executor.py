@@ -29,7 +29,10 @@ class TestMatchExecutor:
     def match_executor(self, mock_http_client, player_urls):
         """Create a match executor."""
         return MatchExecutor(
-            referee_id="ref-1", http_client=mock_http_client, player_urls=player_urls, timeout_ms=30000
+            referee_id="ref-1",
+            http_client=mock_http_client,
+            player_urls=player_urls,
+            timeout_ms=30000,
         )
 
     def test_executor_initialization(self, match_executor):

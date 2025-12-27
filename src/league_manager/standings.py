@@ -46,7 +46,9 @@ class StandingsEngine:
         all_results = self.database.get_all_results(league_id)
 
         # Aggregate statistics per player
-        player_stats = defaultdict(lambda: {"points": 0, "wins": 0, "draws": 0, "losses": 0, "matches_played": 0})
+        player_stats = defaultdict(
+            lambda: {"points": 0, "wins": 0, "draws": 0, "losses": 0, "matches_played": 0}
+        )
 
         for result in all_results:
             outcome = result["outcome"]
@@ -112,7 +114,12 @@ class StandingsEngine:
                 }
             )
 
-        standings_data = {"league_id": league_id, "round_id": round_id, "updated_at": utc_now(), "standings": rankings}
+        standings_data = {
+            "league_id": league_id,
+            "round_id": round_id,
+            "updated_at": utc_now(),
+            "standings": rankings,
+        }
 
         logger.info("Computed standings for league %s: %s players", league_id, len(rankings))
         return standings_data
@@ -132,7 +139,9 @@ class StandingsEngine:
 
         # Create snapshot
         snapshot_id = f"snapshot-{uuid.uuid4()}"
-        self.database.create_standings_snapshot(snapshot_id, league_id, round_id, standings["updated_at"])
+        self.database.create_standings_snapshot(
+            snapshot_id, league_id, round_id, standings["updated_at"]
+        )
 
         # Store rankings
         for ranking in standings["standings"]:

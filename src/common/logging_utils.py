@@ -67,7 +67,11 @@ class AuditLogger:
         self._write_entry(log_entry)
 
     def log_response(
-        self, response: JSONRPCResponse, source: str, destination: str, conversation_id: Optional[str] = None
+        self,
+        response: JSONRPCResponse,
+        source: str,
+        destination: str,
+        conversation_id: Optional[str] = None,
     ) -> None:
         """Log a JSON-RPC response.
 

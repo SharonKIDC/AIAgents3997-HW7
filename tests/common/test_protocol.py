@@ -174,7 +174,15 @@ class TestValidationFunctions:
 
     def test_validate_sender_format_invalid(self):
         """Test that invalid sender formats raise error."""
-        invalid_senders = ["player", "referee", "player:", "referee:", "unknown:test", "player alice", "referee@test"]
+        invalid_senders = [
+            "player",
+            "referee",
+            "player:",
+            "referee:",
+            "unknown:test",
+            "player alice",
+            "referee@test",
+        ]
 
         for sender in invalid_senders:
             with pytest.raises(ValidationError):
@@ -182,7 +190,11 @@ class TestValidationFunctions:
 
     def test_validate_timestamp_valid_utc(self):
         """Test validating valid UTC timestamps."""
-        valid_timestamps = ["2025-12-21T10:30:00Z", "2025-12-21T10:30:00+00:00", "2025-01-01T00:00:00Z"]
+        valid_timestamps = [
+            "2025-12-21T10:30:00Z",
+            "2025-12-21T10:30:00+00:00",
+            "2025-01-01T00:00:00Z",
+        ]
 
         for ts in valid_timestamps:
             validate_timestamp(ts)
@@ -287,7 +299,9 @@ class TestJSONRPCResponse:
 
     def test_jsonrpc_response_error(self):
         """Test creating error response."""
-        response = JSONRPCResponse(jsonrpc="2.0", error={"code": 4000, "message": "Test error"}, id="test-id")
+        response = JSONRPCResponse(
+            jsonrpc="2.0", error={"code": 4000, "message": "Test error"}, id="test-id"
+        )
 
         result = response.to_dict()
         assert result["jsonrpc"] == "2.0"

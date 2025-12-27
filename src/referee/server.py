@@ -37,7 +37,9 @@ class RefereeServer(AgentServerBase):
             port: Port to bind to
             league_manager_url: URL of League Manager
         """
-        super().__init__(referee_id, "referee", host=host, port=port, league_manager_url=league_manager_url)
+        super().__init__(
+            referee_id, "referee", host=host, port=port, league_manager_url=league_manager_url
+        )
         self.referee_id = referee_id
 
         # HTTP server
@@ -93,7 +95,9 @@ class RefereeServer(AgentServerBase):
         if message_type == MessageType.MATCH_ASSIGNMENT:
             response_payload = self._handle_match_assignment(envelope, payload)
         else:
-            raise LeagueError(ErrorCode.INVALID_MESSAGE_TYPE, f"Unsupported message type: {message_type}")
+            raise LeagueError(
+                ErrorCode.INVALID_MESSAGE_TYPE, f"Unsupported message type: {message_type}"
+            )
 
         # Create response envelope
         response_envelope = self._create_response_envelope(
@@ -105,7 +109,9 @@ class RefereeServer(AgentServerBase):
 
         return create_success_response(response_envelope, response_payload, request.id)
 
-    def _handle_match_assignment(self, _envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_match_assignment(
+        self, _envelope: Envelope, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle match assignment from League Manager.
 
         Args:

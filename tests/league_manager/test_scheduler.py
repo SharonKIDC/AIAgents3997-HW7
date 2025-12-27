@@ -23,7 +23,10 @@ class TestRoundRobinScheduler:
         temp_db.create_league(sample_league_id, "SCHEDULING", utc_now(), {})
         for player_id in sample_player_ids:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
         return sample_league_id
 
@@ -97,9 +100,9 @@ class TestRoundRobinScheduler:
             players_in_round = set()
             for match in round_info["matches"]:
                 for player in match["players"]:
-                    assert player not in players_in_round, (
-                        f"Player {player} appears twice in round {round_info['round_number']}"
-                    )
+                    assert (
+                        player not in players_in_round
+                    ), f"Player {player} appears twice in round {round_info['round_number']}"
                     players_in_round.add(player)
 
     def test_schedule_empty_players(self, scheduler, league_with_players):
@@ -123,7 +126,9 @@ class TestRoundRobinScheduler:
 
         # Verify rounds are in database
         for round_info in schedule["rounds"]:
-            cursor = temp_db.conn.execute("SELECT * FROM rounds WHERE round_id = ?", (round_info["round_id"],))
+            cursor = temp_db.conn.execute(
+                "SELECT * FROM rounds WHERE round_id = ?", (round_info["round_id"],)
+            )
             assert cursor.fetchone() is not None
 
             # Verify matches are in database

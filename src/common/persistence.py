@@ -65,17 +65,20 @@ class LeagueDatabase:
             cursor = conn.cursor()
 
             # Leagues table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS leagues (
                     league_id TEXT PRIMARY KEY,
                     status TEXT NOT NULL CHECK(status IN ('INIT', 'REGISTRATION', 'SCHEDULING', 'ACTIVE', 'COMPLETED')),
                     created_at TEXT NOT NULL,
                     config TEXT NOT NULL
                 )
-            """)
+            """
+            )
 
             # Referees table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS referees (
                     referee_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
@@ -85,10 +88,12 @@ class LeagueDatabase:
                     registered_at TEXT NOT NULL,
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id)
                 )
-            """)
+            """
+            )
 
             # Players table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS players (
                     player_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
@@ -98,10 +103,12 @@ class LeagueDatabase:
                     registered_at TEXT NOT NULL,
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id)
                 )
-            """)
+            """
+            )
 
             # Rounds table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS rounds (
                     round_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
@@ -110,10 +117,12 @@ class LeagueDatabase:
                     status TEXT NOT NULL CHECK(status IN ('PENDING', 'ACTIVE', 'COMPLETED')),
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id)
                 )
-            """)
+            """
+            )
 
             # Matches table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS matches (
                     match_id TEXT PRIMARY KEY,
                     round_id TEXT NOT NULL,
@@ -125,10 +134,12 @@ class LeagueDatabase:
                     FOREIGN KEY (round_id) REFERENCES rounds(round_id),
                     FOREIGN KEY (referee_id) REFERENCES referees(referee_id)
                 )
-            """)
+            """
+            )
 
             # Match results table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS match_results (
                     result_id TEXT PRIMARY KEY,
                     match_id TEXT NOT NULL UNIQUE,
@@ -138,10 +149,12 @@ class LeagueDatabase:
                     reported_at TEXT NOT NULL,
                     FOREIGN KEY (match_id) REFERENCES matches(match_id)
                 )
-            """)
+            """
+            )
 
             # Standings snapshots table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS standings_snapshots (
                     snapshot_id TEXT PRIMARY KEY,
                     league_id TEXT NOT NULL,
@@ -150,10 +163,12 @@ class LeagueDatabase:
                     FOREIGN KEY (league_id) REFERENCES leagues(league_id),
                     FOREIGN KEY (round_id) REFERENCES rounds(round_id)
                 )
-            """)
+            """
+            )
 
             # Player rankings table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS player_rankings (
                     snapshot_id TEXT NOT NULL,
                     player_id TEXT NOT NULL,
@@ -167,7 +182,8 @@ class LeagueDatabase:
                     FOREIGN KEY (snapshot_id) REFERENCES standings_snapshots(snapshot_id),
                     FOREIGN KEY (player_id) REFERENCES players(player_id)
                 )
-            """)
+            """
+            )
 
     # League operations
     def create_league(self, league_id: str, status: str, created_at: str, config: Dict[str, Any]):
@@ -193,7 +209,13 @@ class LeagueDatabase:
 
     # Referee operations
     def register_referee(
-        self, referee_id: str, league_id: str, *, auth_token: str, registered_at: str, endpoint_url: str = None
+        self,
+        referee_id: str,
+        league_id: str,
+        *,
+        auth_token: str,
+        registered_at: str,
+        endpoint_url: str = None,
     ):
         """Register a new referee."""
         with self.transaction() as conn:
@@ -218,11 +240,19 @@ class LeagueDatabase:
     def update_referee_status(self, referee_id: str, status: str):
         """Update referee status."""
         with self.transaction() as conn:
-            conn.execute("UPDATE referees SET status = ? WHERE referee_id = ?", (status, referee_id))
+            conn.execute(
+                "UPDATE referees SET status = ? WHERE referee_id = ?", (status, referee_id)
+            )
 
     # Player operations
     def register_player(
-        self, player_id: str, league_id: str, *, auth_token: str, registered_at: str, endpoint_url: str = None
+        self,
+        player_id: str,
+        league_id: str,
+        *,
+        auth_token: str,
+        registered_at: str,
+        endpoint_url: str = None,
     ):
         """Register a new player."""
         with self.transaction() as conn:
@@ -250,7 +280,9 @@ class LeagueDatabase:
             conn.execute("UPDATE players SET status = ? WHERE player_id = ?", (status, player_id))
 
     # Round operations
-    def create_round(self, round_id: str, league_id: str, round_number: int, status: str = "PENDING"):
+    def create_round(
+        self, round_id: str, league_id: str, round_number: int, status: str = "PENDING"
+    ):
         """Create a new round."""
         with self.transaction() as conn:
             conn.execute(
@@ -265,7 +297,13 @@ class LeagueDatabase:
 
     # Match operations
     def create_match(
-        self, match_id: str, round_id: str, game_type: str, *, players: List[str], status: str = "PENDING"
+        self,
+        match_id: str,
+        round_id: str,
+        game_type: str,
+        *,
+        players: List[str],
+        status: str = "PENDING",
     ):
         """Create a new match."""
         with self.transaction() as conn:
@@ -376,7 +414,9 @@ class LeagueDatabase:
         return results
 
     # Standings operations
-    def create_standings_snapshot(self, snapshot_id: str, league_id: str, round_id: Optional[str], computed_at: str):
+    def create_standings_snapshot(
+        self, snapshot_id: str, league_id: str, round_id: Optional[str], computed_at: str
+    ):
         """Create a standings snapshot."""
         with self.transaction() as conn:
             conn.execute(
@@ -409,7 +449,9 @@ class LeagueDatabase:
                 ),
             )
 
-    def get_standings(self, league_id: str, round_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_standings(
+        self, league_id: str, round_id: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get standings for a league or specific round."""
         # Find the most recent snapshot
         if round_id:
@@ -421,7 +463,8 @@ class LeagueDatabase:
             )
         else:
             cursor = self.conn.execute(
-                "SELECT * FROM standings_snapshots WHERE league_id = ? ORDER BY computed_at DESC LIMIT 1", (league_id,)
+                "SELECT * FROM standings_snapshots WHERE league_id = ? ORDER BY computed_at DESC LIMIT 1",
+                (league_id,),
             )
 
         snapshot = cursor.fetchone()
@@ -431,7 +474,9 @@ class LeagueDatabase:
         snapshot_id = snapshot["snapshot_id"]
 
         # Get rankings
-        cursor = self.conn.execute("SELECT * FROM player_rankings WHERE snapshot_id = ? ORDER BY rank", (snapshot_id,))
+        cursor = self.conn.execute(
+            "SELECT * FROM player_rankings WHERE snapshot_id = ? ORDER BY rank", (snapshot_id,)
+        )
         rankings = [dict(row) for row in cursor.fetchall()]
 
         return {

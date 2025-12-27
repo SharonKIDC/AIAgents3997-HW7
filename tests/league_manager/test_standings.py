@@ -27,7 +27,10 @@ class TestStandingsEngine:
         players = ["alice", "bob", "charlie", "dave"]
         for player_id in players:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         # Create round and matches
@@ -115,7 +118,10 @@ class TestStandingsEngine:
         temp_db.create_league(sample_league_id, "ACTIVE", utc_now(), {})
         for player_id in ["alice", "bob", "charlie"]:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         # Create matches
@@ -176,7 +182,10 @@ class TestStandingsEngine:
         temp_db.create_league(sample_league_id, "ACTIVE", utc_now(), {})
         for player_id in ["zebra", "alpha", "beta"]:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         # No matches played - all have 0 points
@@ -193,11 +202,15 @@ class TestStandingsEngine:
         assert snapshot_id is not None
 
         # Verify snapshot exists in database
-        cursor = temp_db.conn.execute("SELECT * FROM standings_snapshots WHERE snapshot_id = ?", (snapshot_id,))
+        cursor = temp_db.conn.execute(
+            "SELECT * FROM standings_snapshots WHERE snapshot_id = ?", (snapshot_id,)
+        )
         assert cursor.fetchone() is not None
 
         # Verify rankings exist
-        cursor = temp_db.conn.execute("SELECT * FROM player_rankings WHERE snapshot_id = ?", (snapshot_id,))
+        cursor = temp_db.conn.execute(
+            "SELECT * FROM player_rankings WHERE snapshot_id = ?", (snapshot_id,)
+        )
         rankings = cursor.fetchall()
         assert len(rankings) == 4
 
@@ -219,7 +232,10 @@ class TestStandingsEngine:
         temp_db.create_league(sample_league_id, "ACTIVE", utc_now(), {})
         for player_id in ["alice", "bob"]:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         standings = standings_engine.compute_standings(sample_league_id)
@@ -238,7 +254,10 @@ class TestStandingsEngine:
         # Register 4 players
         for player_id in ["alice", "bob", "charlie", "dave"]:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         # Only alice and bob play a match
@@ -266,7 +285,10 @@ class TestStandingsEngine:
         temp_db.create_league(sample_league_id, "ACTIVE", utc_now(), {})
         for player_id in ["alice", "bob"]:
             temp_db.register_player(
-                player_id, sample_league_id, auth_token=f"token-{player_id}", registered_at=utc_now()
+                player_id,
+                sample_league_id,
+                auth_token=f"token-{player_id}",
+                registered_at=utc_now(),
             )
 
         # Round 1: Alice wins

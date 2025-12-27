@@ -119,7 +119,9 @@ class TicTacToeGame(GameInterface):
         self.move_count += 1
 
         # Switch player
-        self.current_player = self.player_o if self.current_player == self.player_x else self.player_x
+        self.current_player = (
+            self.player_o if self.current_player == self.player_x else self.player_x
+        )
 
         return True
 
@@ -170,10 +172,16 @@ class TicTacToeGame(GameInterface):
                 return self.board[0][col]
 
         # Check diagonals
-        if self.board[0][0] != Mark.EMPTY.value and self.board[0][0] == self.board[1][1] == self.board[2][2]:
+        if (
+            self.board[0][0] != Mark.EMPTY.value
+            and self.board[0][0] == self.board[1][1] == self.board[2][2]
+        ):
             return self.board[0][0]
 
-        if self.board[0][2] != Mark.EMPTY.value and self.board[0][2] == self.board[1][1] == self.board[2][0]:
+        if (
+            self.board[0][2] != Mark.EMPTY.value
+            and self.board[0][2] == self.board[1][1] == self.board[2][0]
+        ):
             return self.board[0][2]
 
         return None

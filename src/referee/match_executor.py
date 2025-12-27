@@ -7,7 +7,13 @@ specified in the PRD, delegating game-specific logic to game engines.
 import logging
 from typing import Any, Dict
 
-from ..common.errors import ErrorCode, LeagueError, MatchTimeoutError, OperationalError, ProtocolError
+from ..common.errors import (
+    ErrorCode,
+    LeagueError,
+    MatchTimeoutError,
+    OperationalError,
+    ProtocolError,
+)
 from ..common.protocol import Envelope, MessageType, generate_conversation_id, utc_now
 from ..common.transport import LeagueHTTPClient
 from .games import get_game
@@ -19,7 +25,11 @@ class MatchExecutor:
     """Executes matches in a game-agnostic manner."""
 
     def __init__(
-        self, referee_id: str, http_client: LeagueHTTPClient, player_urls: Dict[str, str], timeout_ms: int = 30000
+        self,
+        referee_id: str,
+        http_client: LeagueHTTPClient,
+        player_urls: Dict[str, str],
+        timeout_ms: int = 30000,
     ):
         """Initialize the match executor.
 
@@ -77,7 +87,11 @@ class MatchExecutor:
             # Request move from current player
             try:
                 move = self._request_move(
-                    current_player, match_id, game_type, step_number=game.move_count + 1, step_context=step_context
+                    current_player,
+                    match_id,
+                    game_type,
+                    step_number=game.move_count + 1,
+                    step_context=step_context,
                 )
 
                 # Validate and apply move using the game interface
@@ -150,7 +164,13 @@ class MatchExecutor:
             logger.exception("Unexpected error sending invitation to %s", player_id)
 
     def _request_move(
-        self, player_id: str, match_id: str, game_type: str, *, step_number: int, step_context: Dict[str, Any]
+        self,
+        player_id: str,
+        match_id: str,
+        game_type: str,
+        *,
+        step_number: int,
+        step_context: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Request a move from a player.
 
@@ -169,7 +189,9 @@ class MatchExecutor:
         """
         url = self.player_urls.get(player_id)
         if not url:
-            raise OperationalError(ErrorCode.MATCH_EXECUTION_FAILED, f"No URL for player {player_id}")
+            raise OperationalError(
+                ErrorCode.MATCH_EXECUTION_FAILED, f"No URL for player {player_id}"
+            )
 
         envelope = Envelope(
             protocol="league.v2",
@@ -190,7 +212,9 @@ class MatchExecutor:
         except Exception as e:
             raise MatchTimeoutError(f"Player {player_id} failed to respond: {e}") from e
 
-    def _send_game_over(self, player_id: str, match_id: str, game_type: str, result: Dict[str, Any]):
+    def _send_game_over(
+        self, player_id: str, match_id: str, game_type: str, result: Dict[str, Any]
+    ):
         """Send game over notification to a player.
 
         Args:
@@ -213,7 +237,10 @@ class MatchExecutor:
             game_type=game_type,
         )
 
-        payload = {"outcome": result["outcome"][player_id], "final_state": result.get("game_metadata", {})}
+        payload = {
+            "outcome": result["outcome"][player_id],
+            "final_state": result.get("game_metadata", {}),
+        }
 
         try:
             self.http_client.send_request_no_response(url, envelope, payload)

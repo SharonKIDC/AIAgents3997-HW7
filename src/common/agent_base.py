@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 class AgentServerBase:
     """Base class for agent servers providing common registration logic."""
 
-    def __init__(self, agent_id: str, agent_type: str, *, host: str, port: int, league_manager_url: str):
+    def __init__(
+        self, agent_id: str, agent_type: str, *, host: str, port: int, league_manager_url: str
+    ):
         """Initialize the agent server base.
 
         Args:
@@ -84,14 +86,21 @@ class AgentServerBase:
             conversation_id=generate_conversation_id(),
         )
 
-        payload = {payload_key: self.agent_id, "endpoint_url": f"http://{self.host}:{self.port}/mcp"}
+        payload = {
+            payload_key: self.agent_id,
+            "endpoint_url": f"http://{self.host}:{self.port}/mcp",
+        }
 
         try:
             result = self.http_client.send_request(self.league_manager_url, envelope, payload)
             response_payload = result.get("payload", {})
             self.auth_token = response_payload.get("auth_token")
             self.league_id = response_payload.get("league_id")
-            logger.info("%s registered successfully. League ID: %s", self.agent_type.capitalize(), self.league_id)
+            logger.info(
+                "%s registered successfully. League ID: %s",
+                self.agent_type.capitalize(),
+                self.league_id,
+            )
             return True
         except LeagueError as e:
             logger.error("Registration failed: %s", e)
@@ -128,7 +137,11 @@ class AgentServerBase:
             result = self.http_client.send_request(self.league_manager_url, envelope, payload)
             response_payload = result.get("payload", {})
             agent_state = response_payload.get("agent_state")
-            logger.info("%s ready signal acknowledged. Status: %s", self.agent_type.capitalize(), agent_state)
+            logger.info(
+                "%s ready signal acknowledged. Status: %s",
+                self.agent_type.capitalize(),
+                agent_state,
+            )
             return True
         except LeagueError as e:
             logger.error("Failed to send ready signal: %s", e)
@@ -137,7 +150,9 @@ class AgentServerBase:
             logger.exception("Unexpected error sending ready signal")
             return False
 
-    def _create_response_envelope(self, message_type: str, conversation_id: str, match_id: str = None) -> Envelope:
+    def _create_response_envelope(
+        self, message_type: str, conversation_id: str, match_id: str = None
+    ) -> Envelope:
         """Create a response envelope with standard fields.
 
         Args:

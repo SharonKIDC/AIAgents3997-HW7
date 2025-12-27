@@ -17,7 +17,9 @@ def add_host_port_args(parser: argparse.ArgumentParser, default_port: int):
         default_port: Default port number
     """
     parser.add_argument("--host", default="localhost", help="Host to bind to (default: localhost)")
-    parser.add_argument("--port", type=int, default=default_port, help=f"Port to bind to (default: {default_port})")
+    parser.add_argument(
+        "--port", type=int, default=default_port, help=f"Port to bind to (default: {default_port})"
+    )
 
 
 def add_league_manager_url_arg(parser: argparse.ArgumentParser):

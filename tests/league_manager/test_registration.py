@@ -68,14 +68,18 @@ class TestRegistrationHandler:
         with pytest.raises(DuplicateRegistrationError):
             registration_handler.register_referee("ref-1", sample_referee_envelope)
 
-    def test_register_referee_closed(self, registration_handler, league_state, sample_referee_envelope):
+    def test_register_referee_closed(
+        self, registration_handler, league_state, sample_referee_envelope
+    ):
         """Test that registering when closed raises error."""
         league_state.transition_to(LeagueStatus.SCHEDULING)
 
         with pytest.raises(RegistrationClosedError):
             registration_handler.register_referee("ref-1", sample_referee_envelope)
 
-    def test_register_player_success(self, registration_handler, sample_player_envelope, sample_referee_envelope):
+    def test_register_player_success(
+        self, registration_handler, sample_player_envelope, sample_referee_envelope
+    ):
         """Test successful player registration."""
         # Register a referee first (required)
         registration_handler.register_referee("ref-1", sample_referee_envelope)
@@ -93,7 +97,9 @@ class TestRegistrationHandler:
 
         assert "referee" in str(exc_info.value).lower()
 
-    def test_register_player_duplicate(self, registration_handler, sample_player_envelope, sample_referee_envelope):
+    def test_register_player_duplicate(
+        self, registration_handler, sample_player_envelope, sample_referee_envelope
+    ):
         """Test that duplicate player registration raises error."""
         registration_handler.register_referee("ref-1", sample_referee_envelope)
         registration_handler.register_player("alice", sample_player_envelope)
@@ -101,7 +107,9 @@ class TestRegistrationHandler:
         with pytest.raises(DuplicateRegistrationError):
             registration_handler.register_player("alice", sample_player_envelope)
 
-    def test_register_player_closed(self, registration_handler, league_state, sample_player_envelope):
+    def test_register_player_closed(
+        self, registration_handler, league_state, sample_player_envelope
+    ):
         """Test that registering when closed raises error."""
         league_state.transition_to(LeagueStatus.SCHEDULING)
 

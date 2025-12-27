@@ -120,7 +120,9 @@ class DuplicateRegistrationError(ProtocolError):
 
     def __init__(self, agent_id: str):
         super().__init__(
-            ErrorCode.DUPLICATE_REGISTRATION, f"Agent {agent_id} is already registered", {"agent_id": agent_id}
+            ErrorCode.DUPLICATE_REGISTRATION,
+            f"Agent {agent_id} is already registered",
+            {"agent_id": agent_id},
         )
 
 

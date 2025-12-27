@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 class RegistrationHandler:
     """Handles agent registration requests."""
 
-    def __init__(self, league_state: LeagueState, database: LeagueDatabase, auth_manager: AuthManager):
+    def __init__(
+        self, league_state: LeagueState, database: LeagueDatabase, auth_manager: AuthManager
+    ):
         """Initialize the registration handler.
 
         Args:
@@ -34,7 +36,9 @@ class RegistrationHandler:
         self.database = database
         self.auth_manager = auth_manager
 
-    def register_referee(self, referee_id: str, _envelope: Envelope, endpoint_url: str = None) -> Dict[str, Any]:
+    def register_referee(
+        self, referee_id: str, _envelope: Envelope, endpoint_url: str = None
+    ) -> Dict[str, Any]:
         """Register a referee with the league.
 
         Args:
@@ -72,9 +76,15 @@ class RegistrationHandler:
 
         logger.info("Registered referee: %s at %s", referee_id, endpoint_url)
 
-        return {"status": "registered", "auth_token": auth_token, "league_id": self.league_state.league_id}
+        return {
+            "status": "registered",
+            "auth_token": auth_token,
+            "league_id": self.league_state.league_id,
+        }
 
-    def register_player(self, player_id: str, _envelope: Envelope, endpoint_url: str = None) -> Dict[str, Any]:
+    def register_player(
+        self, player_id: str, _envelope: Envelope, endpoint_url: str = None
+    ) -> Dict[str, Any]:
         """Register a player with the league.
 
         Args:
@@ -97,7 +107,8 @@ class RegistrationHandler:
         # Check at least one referee is registered (PRD Section 3.3)
         if self.league_state.get_referee_count() == 0:
             raise PreconditionFailedError(
-                "At least one referee must be registered before players can register", referee_count=0
+                "At least one referee must be registered before players can register",
+                referee_count=0,
             )
 
         # Check for duplicate registration
@@ -119,4 +130,8 @@ class RegistrationHandler:
 
         logger.info("Registered player: %s at %s", player_id, endpoint_url)
 
-        return {"status": "registered", "auth_token": auth_token, "league_id": self.league_state.league_id}
+        return {
+            "status": "registered",
+            "auth_token": auth_token,
+            "league_id": self.league_state.league_id,
+        }

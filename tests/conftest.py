@@ -57,7 +57,8 @@ def config_manager(tmp_path):
         ConfigManager: Configuration manager with test config
     """
     config_file = tmp_path / "test_config.yaml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 league:
   name: "Test League"
   min_players: 2
@@ -71,7 +72,8 @@ server:
 timeouts:
   move_timeout_ms: 30000
   match_timeout_ms: 300000
-""")
+"""
+    )
     return ConfigManager(str(config_file))
 
 
@@ -120,14 +122,18 @@ def registered_league(temp_db, sample_league_id, auth_manager):
     from src.common.protocol import utc_now
 
     # Create league
-    temp_db.create_league(sample_league_id, "REGISTRATION", utc_now(), {"name": "Test League", "min_players": 2})
+    temp_db.create_league(
+        sample_league_id, "REGISTRATION", utc_now(), {"name": "Test League", "min_players": 2}
+    )
 
     # Register referees
     referee_ids = ["ref-1", "ref-2"]
     referee_tokens = {}
     for ref_id in referee_ids:
         token = auth_manager.issue_token(ref_id, AgentType.REFEREE)
-        temp_db.register_referee(ref_id, sample_league_id, auth_token=token, registered_at=utc_now())
+        temp_db.register_referee(
+            ref_id, sample_league_id, auth_token=token, registered_at=utc_now()
+        )
         referee_tokens[ref_id] = token
 
     # Register players
@@ -135,7 +141,9 @@ def registered_league(temp_db, sample_league_id, auth_manager):
     player_tokens = {}
     for player_id in player_ids:
         token = auth_manager.issue_token(player_id, AgentType.PLAYER)
-        temp_db.register_player(player_id, sample_league_id, auth_token=token, registered_at=utc_now())
+        temp_db.register_player(
+            player_id, sample_league_id, auth_token=token, registered_at=utc_now()
+        )
         player_tokens[player_id] = token
 
     return {
@@ -174,7 +182,11 @@ def sample_jsonrpc_request():
     Returns:
         dict: Valid JSON-RPC request
     """
-    from src.common.protocol import generate_conversation_id, generate_message_id, utc_now
+    from src.common.protocol import (
+        generate_conversation_id,
+        generate_message_id,
+        utc_now,
+    )
 
     return {
         "jsonrpc": "2.0",

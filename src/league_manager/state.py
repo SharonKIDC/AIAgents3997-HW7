@@ -65,7 +65,9 @@ class LeagueState:
                 "min_players": self.config.league.min_players if self.config.league else 2,
                 "max_players": self.config.league.max_players if self.config.league else 100,
             }
-            self.database.create_league(self.league_id, LeagueStatus.REGISTRATION.value, utc_now(), config_data)
+            self.database.create_league(
+                self.league_id, LeagueStatus.REGISTRATION.value, utc_now(), config_data
+            )
             self._status = LeagueStatus.REGISTRATION
             logger.info("Created new league %s", self.league_id)
 
@@ -147,7 +149,10 @@ class LeagueState:
         referee_count = self.get_referee_count()
         player_count = self.get_player_count()
 
-        return referee_count >= self.config.league.min_referees and player_count >= self.config.league.min_players
+        return (
+            referee_count >= self.config.league.min_referees
+            and player_count >= self.config.league.min_players
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """Get league state as dictionary.

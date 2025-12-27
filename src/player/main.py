@@ -20,7 +20,10 @@ def main():
     add_host_port_args(parser, default_port=9001)
     add_league_manager_url_arg(parser)
     parser.add_argument(
-        "--strategy", choices=["smart", "random"], default="smart", help="Strategy to use (default: smart)"
+        "--strategy",
+        choices=["smart", "random"],
+        default="smart",
+        help="Strategy to use (default: smart)",
     )
     add_log_level_arg(parser)
 
@@ -33,7 +36,11 @@ def main():
 
     # Create server
     server = PlayerServer(
-        args.player_id, args.host, args.port, league_manager_url=args.league_manager_url, strategy_type=args.strategy
+        args.player_id,
+        args.host,
+        args.port,
+        league_manager_url=args.league_manager_url,
+        strategy_type=args.strategy,
     )
 
     # Run server with standard startup/shutdown logic

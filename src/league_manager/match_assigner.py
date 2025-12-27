@@ -61,18 +61,28 @@ class MatchAssigner:
 
             # Assign match
             try:
-                assignment_info = self.assign_match(match["match_id"], referee_id, match["game_type"], match["players"])
+                assignment_info = self.assign_match(
+                    match["match_id"], referee_id, match["game_type"], match["players"]
+                )
                 assignments.append(assignment_info)
                 referee_idx += 1
             except OperationalError as e:
-                logger.error("Failed to assign match %s to referee %s: %s", match["match_id"], referee_id, e)
+                logger.error(
+                    "Failed to assign match %s to referee %s: %s", match["match_id"], referee_id, e
+                )
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Unexpected error assigning match %s to referee %s", match["match_id"], referee_id)
+                logger.exception(
+                    "Unexpected error assigning match %s to referee %s",
+                    match["match_id"],
+                    referee_id,
+                )
 
         logger.info("Assigned %s matches to referees", len(assignments))
         return assignments
 
-    def assign_match(self, match_id: str, referee_id: str, game_type: str, players: List[str]) -> Dict[str, Any]:
+    def assign_match(
+        self, match_id: str, referee_id: str, game_type: str, players: List[str]
+    ) -> Dict[str, Any]:
         """Assign a specific match to a referee.
 
         Args:
@@ -99,7 +109,8 @@ class MatchAssigner:
         referee = self.database.get_referee(referee_id)
         if not referee or not referee.get("endpoint_url"):
             raise OperationalError(
-                ErrorCode.INVALID_REFEREE_ID, f"Referee {referee_id} not found or has no endpoint URL"
+                ErrorCode.INVALID_REFEREE_ID,
+                f"Referee {referee_id} not found or has no endpoint URL",
             )
 
         referee_url = referee["endpoint_url"]
@@ -136,7 +147,9 @@ class MatchAssigner:
         # Send to referee
         try:
             self.http_client.send_request(referee_url, envelope, payload)
-            logger.info("Sent match assignment %s to referee %s at %s", match_id, referee_id, referee_url)
+            logger.info(
+                "Sent match assignment %s to referee %s at %s", match_id, referee_id, referee_url
+            )
         except Exception as e:
             logger.error("Failed to send match assignment to referee %s: %s", referee_id, e)
             raise OperationalError(

@@ -31,7 +31,9 @@ class RoundRobinScheduler:
         """
         self.database = database
 
-    def generate_schedule(self, league_id: str, player_ids: List[str], game_type: str) -> Dict[str, Any]:
+    def generate_schedule(
+        self, league_id: str, player_ids: List[str], game_type: str
+    ) -> Dict[str, Any]:
         """Generate a complete round-robin schedule.
 
         Args:
@@ -79,12 +81,16 @@ class RoundRobinScheduler:
 
                 match_infos.append({"match_id": match_id, "players": [player_a, player_b]})
 
-            schedule_info["rounds"].append({"round_id": round_id, "round_number": round_number, "matches": match_infos})
+            schedule_info["rounds"].append(
+                {"round_id": round_id, "round_number": round_number, "matches": match_infos}
+            )
 
         logger.info("Created schedule with %s rounds and %s matches", len(rounds), total_matches)
         return schedule_info
 
-    def _group_into_rounds(self, _players: List[str], matches: List[Tuple[str, str]]) -> List[List[Tuple[str, str]]]:
+    def _group_into_rounds(
+        self, _players: List[str], matches: List[Tuple[str, str]]
+    ) -> List[List[Tuple[str, str]]]:
         """Group matches into rounds where no player appears twice.
 
         This uses a greedy algorithm to create rounds with maximum

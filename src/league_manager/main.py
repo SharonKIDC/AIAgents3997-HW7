@@ -17,7 +17,9 @@ def main():
     """Main entry point for League Manager."""
     parser = argparse.ArgumentParser(description="Agent League System - League Manager")
     add_host_port_args(parser, default_port=8000)
-    parser.add_argument("--config-dir", default="./config", help="Configuration directory (default: ./config)")
+    parser.add_argument(
+        "--config-dir", default="./config", help="Configuration directory (default: ./config)"
+    )
     add_log_level_arg(parser)
 
     args = parser.parse_args()
@@ -52,7 +54,9 @@ def main():
     database.initialize_schema()
 
     # Create and start server
-    server = LeagueManagerServer(args.host, args.port, config=config, database=database, audit_logger=audit_logger)
+    server = LeagueManagerServer(
+        args.host, args.port, config=config, database=database, audit_logger=audit_logger
+    )
 
     # Start server
     server.start()

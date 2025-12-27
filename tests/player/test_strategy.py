@@ -26,7 +26,11 @@ class TestTicTacToeStrategy:
         """Test that computed move has correct format."""
         strategy = TicTacToeStrategy("alice")
 
-        context = {"board": [["", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 1}
+        context = {
+            "board": [["", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 1,
+        }
 
         move = strategy.compute_move(context)
 
@@ -39,7 +43,11 @@ class TestTicTacToeStrategy:
         """Test computing move on empty board."""
         strategy = TicTacToeStrategy("alice")
 
-        context = {"board": [["", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 1}
+        context = {
+            "board": [["", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 1,
+        }
 
         move = strategy.compute_move(context)
 
@@ -54,7 +62,11 @@ class TestTicTacToeStrategy:
         # X X _
         # O O _
         # _ _ _
-        context = {"board": [["X", "X", ""], ["O", "O", ""], ["", "", ""]], "your_mark": "X", "move_number": 5}
+        context = {
+            "board": [["X", "X", ""], ["O", "O", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 5,
+        }
 
         move = strategy.compute_move(context)
 
@@ -69,7 +81,11 @@ class TestTicTacToeStrategy:
         # O O _
         # X _ _
         # _ _ _
-        context = {"board": [["O", "O", ""], ["X", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 4}
+        context = {
+            "board": [["O", "O", ""], ["X", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 4,
+        }
 
         move = strategy.compute_move(context)
 
@@ -84,7 +100,11 @@ class TestTicTacToeStrategy:
         # X X _
         # O O _
         # _ _ _
-        context = {"board": [["X", "X", ""], ["O", "O", ""], ["", "", ""]], "your_mark": "X", "move_number": 5}
+        context = {
+            "board": [["X", "X", ""], ["O", "O", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 5,
+        }
 
         move = strategy.compute_move(context)
 
@@ -99,7 +119,11 @@ class TestTicTacToeStrategy:
         # X O X
         # X O O
         # O X _
-        context = {"board": [["X", "O", "X"], ["X", "O", "O"], ["O", "X", ""]], "your_mark": "X", "move_number": 9}
+        context = {
+            "board": [["X", "O", "X"], ["X", "O", "O"], ["O", "X", ""]],
+            "your_mark": "X",
+            "move_number": 9,
+        }
 
         move = strategy.compute_move(context)
 
@@ -112,7 +136,11 @@ class TestTicTacToeStrategy:
         strategy = TicTacToeStrategy("alice")
 
         # Full board
-        context = {"board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", "O"]], "your_mark": "X", "move_number": 10}
+        context = {
+            "board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", "O"]],
+            "your_mark": "X",
+            "move_number": 10,
+        }
 
         with pytest.raises(ValueError):
             strategy.compute_move(context)
@@ -146,9 +174,17 @@ class TestTicTacToeStrategy:
         strategy_x = TicTacToeStrategy("alice")
         strategy_o = TicTacToeStrategy("bob")
 
-        context_x = {"board": [["", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 1}
+        context_x = {
+            "board": [["", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 1,
+        }
 
-        context_o = {"board": [["X", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "O", "move_number": 2}
+        context_o = {
+            "board": [["X", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "O",
+            "move_number": 2,
+        }
 
         move_x = strategy_x.compute_move(context_x)
         move_o = strategy_o.compute_move(context_o)
@@ -170,7 +206,11 @@ class TestRandomStrategy:
         """Test that random strategy returns valid move."""
         strategy = RandomStrategy("alice")
 
-        context = {"board": [["", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 1}
+        context = {
+            "board": [["", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 1,
+        }
 
         move = strategy.compute_move(context)
 
@@ -184,7 +224,11 @@ class TestRandomStrategy:
         strategy = RandomStrategy("alice")
 
         # Board with only one empty square
-        context = {"board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", ""]], "your_mark": "X", "move_number": 9}
+        context = {
+            "board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", ""]],
+            "your_mark": "X",
+            "move_number": 9,
+        }
 
         move = strategy.compute_move(context)
 
@@ -196,7 +240,11 @@ class TestRandomStrategy:
         """Test that random strategy raises error when no moves available."""
         strategy = RandomStrategy("alice")
 
-        context = {"board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", "O"]], "your_mark": "X", "move_number": 10}
+        context = {
+            "board": [["X", "O", "X"], ["O", "X", "O"], ["O", "X", "O"]],
+            "your_mark": "X",
+            "move_number": 10,
+        }
 
         with pytest.raises(ValueError):
             strategy.compute_move(context)
@@ -205,7 +253,11 @@ class TestRandomStrategy:
         """Test that random strategy produces different moves."""
         strategy = RandomStrategy("alice")
 
-        context = {"board": [["", "", ""], ["", "", ""], ["", "", ""]], "your_mark": "X", "move_number": 1}
+        context = {
+            "board": [["", "", ""], ["", "", ""], ["", "", ""]],
+            "your_mark": "X",
+            "move_number": 1,
+        }
 
         # Generate multiple moves
         moves = [strategy.compute_move(context) for _ in range(20)]

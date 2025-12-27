@@ -101,7 +101,9 @@ class Envelope:
         required = ["protocol", "message_type", "sender", "timestamp", "conversation_id"]
         for field_name in required:
             if field_name not in data:
-                raise ValidationError(f"Missing required envelope field: {field_name}", field=field_name)
+                raise ValidationError(
+                    f"Missing required envelope field: {field_name}", field=field_name
+                )
 
         # Validate protocol version
         if data["protocol"] != PROTOCOL_VERSION:
@@ -176,7 +178,9 @@ def validate_timestamp(timestamp: str) -> None:
         if dt.utcoffset().total_seconds() != 0:
             raise ValidationError(f"Timestamp must be UTC: {timestamp}", field="timestamp")
     except (ValueError, AttributeError) as e:
-        raise ValidationError(f"Invalid timestamp format: {timestamp}", field="timestamp", error=str(e)) from e
+        raise ValidationError(
+            f"Invalid timestamp format: {timestamp}", field="timestamp", error=str(e)
+        ) from e
 
 
 def validate_uuid(value: str, field_name: str) -> None:
@@ -192,7 +196,9 @@ def validate_uuid(value: str, field_name: str) -> None:
     try:
         uuid.UUID(value)
     except ValueError as exc:
-        raise ValidationError(f"Invalid UUID format for {field_name}: {value}", field=field_name) from exc
+        raise ValidationError(
+            f"Invalid UUID format for {field_name}: {value}", field=field_name
+        ) from exc
 
 
 @dataclass
@@ -232,18 +238,27 @@ class JSONRPCRequest:
         # Validate method
         if data.get("method") != MCP_METHOD:
             raise ProtocolError(
-                ErrorCode.INVALID_METHOD, f"Invalid method: {data.get('method')}", {"expected": MCP_METHOD}
+                ErrorCode.INVALID_METHOD,
+                f"Invalid method: {data.get('method')}",
+                {"expected": MCP_METHOD},
             )
 
         # Validate params structure
         if "params" not in data or not isinstance(data["params"], dict):
-            raise ProtocolError(ErrorCode.MISSING_REQUIRED_FIELD, "Missing or invalid 'params' field")
+            raise ProtocolError(
+                ErrorCode.MISSING_REQUIRED_FIELD, "Missing or invalid 'params' field"
+            )
 
         # Validate envelope exists
         if "envelope" not in data["params"]:
             raise ProtocolError(ErrorCode.MISSING_ENVELOPE, "Missing 'envelope' in params")
 
-        return cls(jsonrpc=data["jsonrpc"], method=data["method"], params=data["params"], id=data.get("id", ""))
+        return cls(
+            jsonrpc=data["jsonrpc"],
+            method=data["method"],
+            params=data["params"],
+            id=data.get("id", ""),
+        )
 
 
 @dataclass
@@ -267,7 +282,9 @@ class JSONRPCResponse:
         return response
 
 
-def create_success_response(envelope: Envelope, payload: Dict[str, Any], request_id: str) -> JSONRPCResponse:
+def create_success_response(
+    envelope: Envelope, payload: Dict[str, Any], request_id: str
+) -> JSONRPCResponse:
     """Create a success JSON-RPC response.
 
     Args:
@@ -279,12 +296,17 @@ def create_success_response(envelope: Envelope, payload: Dict[str, Any], request
         JSONRPCResponse with result
     """
     return JSONRPCResponse(
-        jsonrpc=JSONRPC_VERSION, result={"envelope": envelope.to_dict(), "payload": payload}, id=request_id
+        jsonrpc=JSONRPC_VERSION,
+        result={"envelope": envelope.to_dict(), "payload": payload},
+        id=request_id,
     )
 
 
 def create_error_response(
-    error_code: int, error_message: str, error_data: Optional[Dict[str, Any]] = None, request_id: Optional[str] = None
+    error_code: int,
+    error_message: str,
+    error_data: Optional[Dict[str, Any]] = None,
+    request_id: Optional[str] = None,
 ) -> JSONRPCResponse:
     """Create an error JSON-RPC response.
 

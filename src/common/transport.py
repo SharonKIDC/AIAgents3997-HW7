@@ -56,7 +56,9 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(body.decode("utf-8"))
             except json.JSONDecodeError as e:
-                response = create_error_response(ErrorCode.INVALID_JSON_RPC, f"Invalid JSON: {str(e)}", request_id=None)
+                response = create_error_response(
+                    ErrorCode.INVALID_JSON_RPC, f"Invalid JSON: {str(e)}", request_id=None
+                )
                 self._send_json_response(response.to_dict())
                 return
 
@@ -86,7 +88,9 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
                 except (ValueError, KeyError, TypeError) as e:
                     logger.error("Invalid request or response: %s", e)
                     response = create_error_response(
-                        ErrorCode.INTERNAL_ERROR, f"Request handling error: {str(e)}", request_id=request.id
+                        ErrorCode.INTERNAL_ERROR,
+                        f"Request handling error: {str(e)}",
+                        request_id=request.id,
                     )
                     self._send_json_response(response.to_dict())
                 except Exception as e:  # pylint: disable=broad-exception-caught
@@ -211,7 +215,11 @@ class LeagueHTTPClient:
         self.timeout = timeout
 
     def send_request(
-        self, url: str, envelope: Envelope, payload: Dict[str, Any], request_id: Optional[str] = None
+        self,
+        url: str,
+        envelope: Envelope,
+        payload: Dict[str, Any],
+        request_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Send a JSON-RPC request to another agent.
 
@@ -279,12 +287,16 @@ class LeagueHTTPClient:
         except http.client.HTTPException as e:
             raise ProtocolError(ErrorCode.INTERNAL_ERROR, f"HTTP error: {str(e)}") from e
         except json.JSONDecodeError as e:
-            raise ProtocolError(ErrorCode.INVALID_JSON_RPC, f"Invalid JSON response: {str(e)}") from e
+            raise ProtocolError(
+                ErrorCode.INVALID_JSON_RPC, f"Invalid JSON response: {str(e)}"
+            ) from e
         finally:
             if "conn" in locals():
                 conn.close()
 
-    def send_request_no_response(self, url: str, envelope: Envelope, payload: Dict[str, Any]) -> None:
+    def send_request_no_response(
+        self, url: str, envelope: Envelope, payload: Dict[str, Any]
+    ) -> None:
         """Send a request without waiting for meaningful response.
 
         This is used for fire-and-forget messages where we only care

@@ -26,7 +26,15 @@ logger = logging.getLogger(__name__)
 class PlayerServer(AgentServerBase):
     """Player server for handling game invitations and move requests."""
 
-    def __init__(self, player_id: str, host: str, port: int, *, league_manager_url: str, strategy_type: str = "smart"):
+    def __init__(
+        self,
+        player_id: str,
+        host: str,
+        port: int,
+        *,
+        league_manager_url: str,
+        strategy_type: str = "smart",
+    ):
         """Initialize the player server.
 
         Args:
@@ -36,7 +44,9 @@ class PlayerServer(AgentServerBase):
             league_manager_url: URL of League Manager
             strategy_type: Strategy to use ("smart" or "random")
         """
-        super().__init__(player_id, "player", host=host, port=port, league_manager_url=league_manager_url)
+        super().__init__(
+            player_id, "player", host=host, port=port, league_manager_url=league_manager_url
+        )
         self.player_id = player_id
 
         # Initialize strategy using registry
@@ -109,7 +119,9 @@ class PlayerServer(AgentServerBase):
             response_payload = self._handle_game_over(envelope, payload)
             response_type = None  # No response expected
         else:
-            raise LeagueError(ErrorCode.INVALID_MESSAGE_TYPE, f"Unsupported message type: {message_type}")
+            raise LeagueError(
+                ErrorCode.INVALID_MESSAGE_TYPE, f"Unsupported message type: {message_type}"
+            )
 
         if response_type:
             # Create response envelope
@@ -121,7 +133,9 @@ class PlayerServer(AgentServerBase):
         # Acknowledgement without specific response
         return create_success_response(envelope, {}, request.id)
 
-    def _handle_game_invitation(self, _envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def _handle_game_invitation(
+        self, _envelope: Envelope, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle game invitation from referee.
 
         Args:
