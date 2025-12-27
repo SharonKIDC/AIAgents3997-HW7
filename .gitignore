@@ -221,10 +221,6 @@ venv/
 docs/development/
 
 # Claude Code agent system
-# Claude Code workspace (but track agents and CLAUDE.md)
-.claude/*
-!.claude/CLAUDE.md
-!.claude/agents/
-.claude/agents/*
-!.claude/agents/*.md
+# Claude Code workspace
+.claude/
 
