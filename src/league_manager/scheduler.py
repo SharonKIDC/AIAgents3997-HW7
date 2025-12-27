@@ -63,7 +63,7 @@ class RoundRobinScheduler:
         all_matches = list(itertools.combinations(sorted_players, 2))
         total_matches = len(all_matches)
 
-        logger.info(f"Generating schedule for {n} players: {total_matches} total matches")
+        logger.info("Generating schedule for %s players: %s total matches", n, total_matches)
 
         # Group matches into rounds using round-robin algorithm
         rounds = self._group_into_rounds(sorted_players, all_matches)
@@ -95,7 +95,7 @@ class RoundRobinScheduler:
                     match_id,
                     round_id,
                     game_type,
-                    [player_a, player_b],
+                    players=[player_a, player_b],
                     status='PENDING'
                 )
 
@@ -110,12 +110,12 @@ class RoundRobinScheduler:
                 'matches': match_infos
             })
 
-        logger.info(f"Created schedule with {len(rounds)} rounds and {total_matches} matches")
+        logger.info("Created schedule with %s rounds and %s matches", len(rounds), total_matches)
         return schedule_info
 
     def _group_into_rounds(
         self,
-        players: List[str],
+        _players: List[str],
         matches: List[Tuple[str, str]]
     ) -> List[List[Tuple[str, str]]]:
         """Group matches into rounds where no player appears twice.
@@ -124,7 +124,7 @@ class RoundRobinScheduler:
         concurrent matches.
 
         Args:
-            players: List of player IDs
+            _players: List of player IDs (unused, inferred from matches)
             matches: List of match pairs
 
         Returns:
@@ -156,11 +156,11 @@ class RoundRobinScheduler:
 
         return rounds
 
-    def get_schedule(self, league_id: str) -> Dict[str, Any]:
+    def get_schedule(self, _league_id: str) -> Dict[str, Any]:
         """Retrieve the generated schedule for a league.
 
         Args:
-            league_id: League identifier
+            _league_id: League identifier (unused, placeholder implementation)
 
         Returns:
             Schedule information

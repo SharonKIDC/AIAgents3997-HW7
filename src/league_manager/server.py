@@ -5,12 +5,13 @@ JSON-RPC requests and coordinates between components.
 """
 
 import logging
+import time
 import uuid
 from typing import Any, Callable, Dict
 
 from ..common.auth import AuthManager
 from ..common.config import ConfigManager
-from ..common.errors import ErrorCode, LeagueError, ValidationError
+from ..common.errors import LeagueError, ValidationError
 from ..common.logging_utils import AuditLogger
 from ..common.persistence import LeagueDatabase
 from ..common.protocol import (
@@ -18,9 +19,13 @@ from ..common.protocol import (
     JSONRPCRequest,
     JSONRPCResponse,
     MessageType,
-    create_error_response,
     create_success_response,
     utc_now,
+)
+from ..common.request_handlers import (
+    create_internal_error_response,
+    create_league_error_response,
+    create_validation_error_response,
 )
 from ..common.transport import LeagueHTTPClient, LeagueHTTPServer
 from .match_assigner import MatchAssigner
@@ -39,6 +44,7 @@ class LeagueManagerServer:
         self,
         host: str,
         port: int,
+        *,
         config: ConfigManager,
         database: LeagueDatabase,
         audit_logger: AuditLogger
@@ -101,8 +107,8 @@ class LeagueManagerServer:
 
         # Start HTTP server
         self.http_server.start()
-        logger.info(f"League Manager started on {self.host}:{self.port}")
-        logger.info(f"League ID: {self.league_state.league_id}, Status: {self.league_state.status}")
+        logger.info("League Manager started on %s:%s", self.host, self.port)
+        logger.info("League ID: %s, Status: %s", self.league_state.league_id, self.league_state.status)
 
     def stop(self):
         """Stop the League Manager server."""
@@ -179,21 +185,14 @@ class LeagueManagerServer:
 
             return response
 
+        # pylint: disable=duplicate-code
+        # Exception handling structure matches request_handlers but with audit logging
         except LeagueError as e:
-            logger.warning(f"League error: {e}")
-            return create_error_response(
-                int(e.code),
-                e.message,
-                e.details,
-                request.id
-            )
-        except Exception as e:
-            logger.exception("Unexpected error handling request")
-            return create_error_response(
-                ErrorCode.INTERNAL_ERROR,
-                f"Internal error: {str(e)}",
-                request_id=request.id
-            )
+            return create_league_error_response(e, request.id)
+        except (ValueError, KeyError) as e:
+            return create_validation_error_response(e, request.id)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            return create_internal_error_response(e, request.id)
 
     def _handle_register_referee(
         self,
@@ -254,10 +253,10 @@ class LeagueManagerServer:
         self.database.store_result(
             result_id,
             match_id,
-            outcome,
-            points,
-            game_metadata,
-            utc_now()
+            outcome=outcome,
+            points=points,
+            game_metadata=game_metadata,
+            reported_at=utc_now()
         )
 
         # Update match status
@@ -269,7 +268,7 @@ class LeagueManagerServer:
             envelope.round_id
         )
 
-        logger.info(f"Match result recorded: {match_id}")
+        logger.info("Match result recorded: %s", match_id)
 
         # Check if all matches are complete
         pending_matches = self.database.get_pending_matches(self.league_state.league_id)
@@ -294,7 +293,7 @@ class LeagueManagerServer:
 
     def _handle_query_standings(
         self,
-        envelope: Envelope,
+        _envelope: Envelope,
         payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle standings query."""
@@ -307,18 +306,17 @@ class LeagueManagerServer:
 
         if standings:
             return standings
-        else:
-            # Return empty standings if none computed yet
-            return {
-                'round_id': round_id,
-                'updated_at': utc_now(),
-                'standings': []
-            }
+        # Return empty standings if none computed yet
+        return {
+            'round_id': round_id,
+            'updated_at': utc_now(),
+            'standings': []
+        }
 
     def _handle_agent_ready(
         self,
         envelope: Envelope,
-        payload: Dict[str, Any]
+        _payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle agent ready notification.
 
@@ -343,7 +341,7 @@ class LeagueManagerServer:
 
             # Update status to ACTIVE
             self.database.update_referee_status(agent_id, 'ACTIVE')
-            logger.info(f"Referee {agent_id} is now ACTIVE")
+            logger.info("Referee %s is now ACTIVE", agent_id)
 
         elif agent_type == 'player':
             agent = self.database.get_player(agent_id)
@@ -352,7 +350,7 @@ class LeagueManagerServer:
 
             # Update status to ACTIVE
             self.database.update_player_status(agent_id, 'ACTIVE')
-            logger.info(f"Player {agent_id} is now ACTIVE")
+            logger.info("Player %s is now ACTIVE", agent_id)
 
         else:
             raise ValidationError(
@@ -369,8 +367,8 @@ class LeagueManagerServer:
 
     def _handle_admin_start_league(
         self,
-        envelope: Envelope,
-        payload: Dict[str, Any]
+        _envelope: Envelope,
+        _payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle admin request to start the league.
 
@@ -384,21 +382,20 @@ class LeagueManagerServer:
                 'league_status': self.league_state.status.value,
                 'message': 'League started successfully'
             }
-        else:
-            raise ValidationError(
-                "Cannot start league: minimum requirements not met",
-                details={
-                    'referees': self.league_state.get_referee_count(),
-                    'players': self.league_state.get_player_count(),
-                    'min_referees': 1,
-                    'min_players': 2
-                }
-            )
+        raise ValidationError(
+            "Cannot start league: minimum requirements not met",
+            details={
+                'referees': self.league_state.get_referee_count(),
+                'players': self.league_state.get_player_count(),
+                'min_referees': 1,
+                'min_players': 2
+            }
+        )
 
     def _handle_admin_get_status(
         self,
-        envelope: Envelope,
-        payload: Dict[str, Any]
+        _envelope: Envelope,
+        _payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle admin request to get detailed league status."""
         return {
@@ -453,7 +450,7 @@ class LeagueManagerServer:
             game_type
         )
 
-        logger.info(f"Generated schedule: {schedule['total_rounds']} rounds, {schedule['total_matches']} matches")
+        logger.info("Generated schedule: %s rounds, %s matches", schedule['total_rounds'], schedule['total_matches'])
 
         # NOTE: Agents must send AGENT_READY_REQUEST to transition from REGISTERED to ACTIVE
         # This ensures only operational agents participate in matches
@@ -463,7 +460,6 @@ class LeagueManagerServer:
         self.league_state.transition_to(LeagueStatus.ACTIVE)
 
         # Wait for agents to send ready signals (poll with timeout)
-        import time
         max_wait_seconds = 10
         poll_interval = 0.5
         waited = 0
@@ -473,15 +469,15 @@ class LeagueManagerServer:
             active_referees = [r for r in referees if r['status'] == 'ACTIVE']
 
             if len(active_referees) > 0:
-                logger.info(f"Found {len(active_referees)} active referee(s). Proceeding with match assignment.")
+                logger.info("Found %s active referee(s). Proceeding with match assignment.", len(active_referees))
                 break
 
-            logger.debug(f"Waiting for referees to signal ready... ({waited:.1f}s elapsed)")
+            logger.debug("Waiting for referees to signal ready... (%.1fs elapsed)", waited)
             time.sleep(poll_interval)
             waited += poll_interval
 
         if waited >= max_wait_seconds:
-            logger.warning(f"Timeout waiting for referees to signal ready after {max_wait_seconds}s")
+            logger.warning("Timeout waiting for referees to signal ready after %ss", max_wait_seconds)
 
         # Assign matches
         self.match_assigner.assign_pending_matches(self.league_state.league_id)

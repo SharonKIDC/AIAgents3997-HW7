@@ -9,6 +9,7 @@ import random
 from typing import Any, Dict
 
 from ...common.strategy_interface import StrategyInterface
+from ...common.tic_tac_toe_utils import get_available_moves
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +20,6 @@ class TicTacToeRandomStrategy(StrategyInterface):
     This strategy simply picks a random valid move from
     all available positions.
     """
-
-    def __init__(self, player_id: str):
-        """Initialize the strategy.
-
-        Args:
-            player_id: Player identifier
-        """
-        super().__init__(player_id)
 
     def compute_move(self, step_context: Dict[str, Any]) -> Dict[str, Any]:
         """Compute random move.
@@ -42,12 +35,8 @@ class TicTacToeRandomStrategy(StrategyInterface):
         """
         board = step_context.get('board', [])
 
-        # Find available moves
-        available_moves = []
-        for row in range(3):
-            for col in range(3):
-                if board[row][col] == "":
-                    available_moves.append((row, col))
+        # Find available moves using shared utility
+        available_moves = get_available_moves(board)
 
         if not available_moves:
             raise ValueError("No available moves")

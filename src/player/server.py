@@ -5,26 +5,25 @@ and move requests from referees.
 """
 
 import logging
+import random
 from typing import Any, Dict
 
+from ..common.agent_base import AgentServerBase
 from ..common.errors import ErrorCode, LeagueError
 from ..common.protocol import (
     Envelope,
     JSONRPCRequest,
     JSONRPCResponse,
     MessageType,
-    create_error_response,
     create_success_response,
-    generate_conversation_id,
-    utc_now,
 )
-from ..common.transport import LeagueHTTPClient, LeagueHTTPServer
+from ..common.request_handlers import handle_request_errors
 from .strategies import get_strategy
 
 logger = logging.getLogger(__name__)
 
 
-class PlayerServer:
+class PlayerServer(AgentServerBase):
     """Player server for handling game invitations and move requests."""
 
     def __init__(
@@ -32,6 +31,7 @@ class PlayerServer:
         player_id: str,
         host: str,
         port: int,
+        *,
         league_manager_url: str,
         strategy_type: str = "smart"
     ):
@@ -44,28 +44,27 @@ class PlayerServer:
             league_manager_url: URL of League Manager
             strategy_type: Strategy to use ("smart" or "random")
         """
+        super().__init__(
+            player_id,
+            "player",
+            host=host,
+            port=port,
+            league_manager_url=league_manager_url
+        )
         self.player_id = player_id
-        self.host = host
-        self.port = port
-        self.league_manager_url = league_manager_url
-        self.auth_token = None
-        self.league_id = None
 
         # Initialize strategy using registry
         try:
             self.strategy = get_strategy(strategy_type, player_id)
-            logger.info(f"Loaded strategy: {self.strategy.get_strategy_name()}")
+            logger.info("Loaded strategy: %s", self.strategy.get_strategy_name())
         except ValueError as e:
-            logger.error(f"Failed to load strategy '{strategy_type}': {e}")
+            logger.error("Failed to load strategy '%s': %s", strategy_type, e)
             # Fallback to smart strategy
             self.strategy = get_strategy('smart', player_id)
-            logger.warning(f"Using fallback strategy: {self.strategy.get_strategy_name()}")
+            logger.warning("Using fallback strategy: %s", self.strategy.get_strategy_name())
 
-        # HTTP client and server
-        self.http_client = LeagueHTTPClient()
-        self.http_server = LeagueHTTPServer(
-            host,
-            port,
+        # HTTP server
+        self.http_server = self._create_http_server(
             self._handle_request,
             self._get_status
         )
@@ -76,12 +75,12 @@ class PlayerServer:
     def start(self):
         """Start the player server."""
         self.http_server.start()
-        logger.info(f"Player {self.player_id} started on {self.host}:{self.port}")
+        logger.info("Player %s started on %s:%s", self.player_id, self.host, self.port)
 
     def stop(self):
         """Stop the player server."""
         self.http_server.stop()
-        logger.info(f"Player {self.player_id} stopped")
+        logger.info("Player %s stopped", self.player_id)
 
     def register(self) -> bool:
         """Register with the League Manager.
@@ -89,71 +88,10 @@ class PlayerServer:
         Returns:
             True if registration successful
         """
-        envelope = Envelope(
-            protocol="league.v2",
-            message_type=MessageType.REGISTER_PLAYER_REQUEST.value,
-            sender=f"player:{self.player_id}",
-            timestamp=utc_now(),
-            conversation_id=generate_conversation_id()
+        return self._do_register(
+            MessageType.REGISTER_PLAYER_REQUEST,
+            'player_id'
         )
-
-        payload = {
-            'player_id': self.player_id,
-            'endpoint_url': f"http://{self.host}:{self.port}/mcp"
-        }
-
-        try:
-            result = self.http_client.send_request(
-                self.league_manager_url,
-                envelope,
-                payload
-            )
-            response_payload = result.get('payload', {})
-            self.auth_token = response_payload.get('auth_token')
-            self.league_id = response_payload.get('league_id')
-            logger.info(f"Player registered successfully. League ID: {self.league_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Registration failed: {e}")
-            return False
-
-    def send_ready(self) -> bool:
-        """Send ready signal to League Manager.
-
-        Signals that the player has completed initialization and is ready
-        to participate in matches.
-
-        Returns:
-            True if ready signal acknowledged
-        """
-        if not self.auth_token:
-            logger.error("Cannot send ready signal: not registered")
-            return False
-
-        envelope = Envelope(
-            protocol="league.v2",
-            message_type=MessageType.AGENT_READY_REQUEST.value,
-            sender=f"player:{self.player_id}",
-            timestamp=utc_now(),
-            conversation_id=generate_conversation_id(),
-            auth_token=self.auth_token
-        )
-
-        payload = {}
-
-        try:
-            result = self.http_client.send_request(
-                self.league_manager_url,
-                envelope,
-                payload
-            )
-            response_payload = result.get('payload', {})
-            agent_state = response_payload.get('agent_state')
-            logger.info(f"Player ready signal acknowledged. Status: {agent_state}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to send ready signal: {e}")
-            return False
 
     def _handle_request(self, request: JSONRPCRequest) -> JSONRPCResponse:
         """Handle incoming JSON-RPC request.
@@ -164,77 +102,67 @@ class PlayerServer:
         Returns:
             JSON-RPC response
         """
-        try:
-            envelope = Envelope.from_dict(request.params['envelope'])
-            payload = request.params.get('payload', {})
+        return handle_request_errors(request, self._handle_request_internal)
 
-            # Dispatch based on message type
-            message_type = MessageType(envelope.message_type)
+    def _handle_request_internal(self, request: JSONRPCRequest) -> JSONRPCResponse:
+        """Internal request handler with business logic.
 
-            if message_type == MessageType.GAME_INVITATION:
-                response_payload = self._handle_game_invitation(envelope, payload)
-                response_type = MessageType.GAME_JOIN_ACK.value
-            elif message_type == MessageType.REQUEST_MOVE:
-                response_payload = self._handle_move_request(envelope, payload)
-                response_type = MessageType.MOVE_RESPONSE.value
-            elif message_type == MessageType.GAME_OVER:
-                response_payload = self._handle_game_over(envelope, payload)
-                response_type = None  # No response expected
-            else:
-                raise LeagueError(
-                    ErrorCode.INVALID_MESSAGE_TYPE,
-                    f"Unsupported message type: {message_type}"
-                )
+        Args:
+            request: Validated JSON-RPC request
 
-            if response_type:
-                # Create response envelope
-                response_envelope = Envelope(
-                    protocol="league.v2",
-                    message_type=response_type,
-                    sender=f"player:{self.player_id}",
-                    timestamp=utc_now(),
-                    conversation_id=envelope.conversation_id,
-                    match_id=envelope.match_id
-                )
+        Returns:
+            JSON-RPC response
+        """
+        envelope = Envelope.from_dict(request.params['envelope'])
+        payload = request.params.get('payload', {})
 
-                return create_success_response(
-                    response_envelope,
-                    response_payload,
-                    request.id
-                )
-            else:
-                # Acknowledgement without specific response
-                return create_success_response(
-                    envelope,
-                    {},
-                    request.id
-                )
+        # Dispatch based on message type
+        message_type = MessageType(envelope.message_type)
 
-        except LeagueError as e:
-            logger.warning(f"League error: {e}")
-            return create_error_response(
-                int(e.code),
-                e.message,
-                e.details,
+        if message_type == MessageType.GAME_INVITATION:
+            response_payload = self._handle_game_invitation(envelope, payload)
+            response_type = MessageType.GAME_JOIN_ACK.value
+        elif message_type == MessageType.REQUEST_MOVE:
+            response_payload = self._handle_move_request(envelope, payload)
+            response_type = MessageType.MOVE_RESPONSE.value
+        elif message_type == MessageType.GAME_OVER:
+            response_payload = self._handle_game_over(envelope, payload)
+            response_type = None  # No response expected
+        else:
+            raise LeagueError(
+                ErrorCode.INVALID_MESSAGE_TYPE,
+                f"Unsupported message type: {message_type}"
+            )
+
+        if response_type:
+            # Create response envelope
+            response_envelope = self._create_response_envelope(
+                response_type,
+                envelope.conversation_id,
+                envelope.match_id
+            )
+
+            return create_success_response(
+                response_envelope,
+                response_payload,
                 request.id
             )
-        except Exception as e:
-            logger.exception("Unexpected error handling request")
-            return create_error_response(
-                ErrorCode.INTERNAL_ERROR,
-                f"Internal error: {str(e)}",
-                request_id=request.id
-            )
+        # Acknowledgement without specific response
+        return create_success_response(
+            envelope,
+            {},
+            request.id
+        )
 
     def _handle_game_invitation(
         self,
-        envelope: Envelope,
+        _envelope: Envelope,
         payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle game invitation from referee.
 
         Args:
-            envelope: Request envelope
+            _envelope: Request envelope (unused but required by handler interface)
             payload: Invitation payload
 
         Returns:
@@ -244,7 +172,7 @@ class PlayerServer:
         game_type = payload.get('game_type')
         opponents = payload.get('opponents', [])
 
-        logger.info(f"Received game invitation: {match_id}, opponents: {opponents}")
+        logger.info("Received game invitation: %s, opponents: %s", match_id, opponents)
 
         # Track match
         self.current_matches[match_id] = {
@@ -259,13 +187,13 @@ class PlayerServer:
 
     def _handle_move_request(
         self,
-        envelope: Envelope,
+        _envelope: Envelope,
         payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle move request from referee.
 
         Args:
-            envelope: Request envelope
+            _envelope: Request envelope (unused but required by handler interface)
             payload: Move request payload
 
         Returns:
@@ -274,13 +202,17 @@ class PlayerServer:
         step_number = payload.get('step_number')
         step_context = payload.get('step_context', {})
 
-        logger.debug(f"Received move request for step {step_number}")
+        logger.debug("Received move request for step %s", step_number)
 
         # Compute move using strategy
         try:
             move = self.strategy.compute_move(step_context)
-        except Exception as e:
-            logger.error(f"Strategy error: {e}")
+        except (ValueError, KeyError, IndexError) as e:
+            logger.error("Strategy error: %s", e)
+            # Return a random valid move as fallback
+            move = self._get_fallback_move(step_context)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Unexpected error in strategy")
             # Return a random valid move as fallback
             move = self._get_fallback_move(step_context)
 
@@ -305,7 +237,7 @@ class PlayerServer:
         match_id = envelope.match_id
         outcome = payload.get('outcome')
 
-        logger.info(f"Game over for match {match_id}: {outcome}")
+        logger.info("Game over for match %s: %s", match_id, outcome)
 
         # Clean up match tracking
         if match_id in self.current_matches:
@@ -322,7 +254,6 @@ class PlayerServer:
         Returns:
             Valid move
         """
-        import random
         board = step_context.get('board', [])
         available = []
         for row in range(3):
@@ -333,8 +264,7 @@ class PlayerServer:
         if available:
             move = random.choice(available)
             return {'row': move[0], 'col': move[1]}
-        else:
-            return {'row': 0, 'col': 0}
+        return {'row': 0, 'col': 0}
 
     def _get_status(self) -> Dict[str, Any]:
         """Get player status.
@@ -342,9 +272,6 @@ class PlayerServer:
         Returns:
             Status dictionary
         """
-        return {
-            'player_id': self.player_id,
-            'status': 'ACTIVE' if self.auth_token else 'INIT',
-            'league_id': self.league_id,
-            'active_matches': len(self.current_matches)
-        }
+        status = self._get_base_status()
+        status['active_matches'] = len(self.current_matches)
+        return status

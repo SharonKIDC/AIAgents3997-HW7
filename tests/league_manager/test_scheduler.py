@@ -22,7 +22,7 @@ class TestRoundRobinScheduler:
         """Create a league with registered players."""
         temp_db.create_league(sample_league_id, 'SCHEDULING', utc_now(), {})
         for player_id in sample_player_ids:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
         return sample_league_id
 
     def test_schedule_generation_two_players(self, scheduler, league_with_players, temp_db):

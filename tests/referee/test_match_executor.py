@@ -65,7 +65,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         # Verify result structure
@@ -102,7 +102,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         assert result['outcome']['alice'] == 'draw'
@@ -125,7 +125,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         # Alice forfeits, Bob wins
@@ -148,7 +148,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         # Alice forfeits, Bob wins
@@ -163,7 +163,7 @@ class TestMatchExecutor:
                 round_id='round-1',
                 game_type='chess',  # Not supported
                 players=['alice', 'bob'],
-                league_id='league-1'
+                _league_id='league-1'
             )
 
         assert 'Unsupported game type' in str(exc_info.value)
@@ -186,7 +186,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         # Verify invitations were sent
@@ -210,7 +210,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         # Verify game over messages were sent
@@ -234,7 +234,7 @@ class TestMatchExecutor:
             round_id='round-1',
             game_type='tic_tac_toe',
             players=['alice', 'bob'],
-            league_id='league-1'
+            _league_id='league-1'
         )
 
         assert 'game_metadata' in result

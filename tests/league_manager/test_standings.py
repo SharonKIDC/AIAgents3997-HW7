@@ -26,28 +26,30 @@ class TestStandingsEngine:
         # Register players
         players = ['alice', 'bob', 'charlie', 'dave']
         for player_id in players:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         # Create round and matches
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
-        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', ['charlie', 'dave'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
+        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', players=['charlie', 'dave'])
 
         # Add results
         # Alice beats Bob
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Charlie and Dave draw
         temp_db.store_result(
             'result-2', 'match-2',
-            {'charlie': 'draw', 'dave': 'draw'},
-            {'charlie': 1, 'dave': 1},
-            None, utc_now()
+            outcome={'charlie': 'draw', 'dave': 'draw'},
+            points={'charlie': 1, 'dave': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         return sample_league_id
@@ -108,43 +110,47 @@ class TestStandingsEngine:
         # Create league and players
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         for player_id in ['alice', 'bob', 'charlie']:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         # Create matches
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'charlie'])
-        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', ['bob', 'charlie'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'charlie'])
+        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', players=['bob', 'charlie'])
 
         # Alice: 1 win (3 points)
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'charlie': 'loss'},
-            {'alice': 3, 'charlie': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'charlie': 'loss'},
+            points={'alice': 3, 'charlie': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Bob: 3 draws (3 points, but 0 wins)
         temp_db.store_result(
             'result-2', 'match-2',
-            {'bob': 'draw', 'charlie': 'draw'},
-            {'bob': 1, 'charlie': 1},
-            None, utc_now()
+            outcome={'bob': 'draw', 'charlie': 'draw'},
+            points={'bob': 1, 'charlie': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Add more draws for Bob to get 3 points
-        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', ['bob', 'alice'])
-        temp_db.create_match('match-4', 'round-1', 'tic_tac_toe', ['bob', 'alice'])
+        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', players=['bob', 'alice'])
+        temp_db.create_match('match-4', 'round-1', 'tic_tac_toe', players=['bob', 'alice'])
         temp_db.store_result(
             'result-3', 'match-3',
-            {'bob': 'draw', 'alice': 'draw'},
-            {'bob': 1, 'alice': 1},
-            None, utc_now()
+            outcome={'bob': 'draw', 'alice': 'draw'},
+            points={'bob': 1, 'alice': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
         temp_db.store_result(
             'result-4', 'match-4',
-            {'bob': 'draw', 'alice': 'draw'},
-            {'bob': 1, 'alice': 1},
-            None, utc_now()
+            outcome={'bob': 'draw', 'alice': 'draw'},
+            points={'bob': 1, 'alice': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         standings = standings_engine.compute_standings(sample_league_id)
@@ -159,7 +165,7 @@ class TestStandingsEngine:
         # Create league and players with alphabetically different IDs
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         for player_id in ['zebra', 'alpha', 'beta']:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         # No matches played - all have 0 points
         standings = standings_engine.compute_standings(sample_league_id)
@@ -206,7 +212,7 @@ class TestStandingsEngine:
         # Create league and players but no results
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         for player_id in ['alice', 'bob']:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         standings = standings_engine.compute_standings(sample_league_id)
 
@@ -223,16 +229,17 @@ class TestStandingsEngine:
 
         # Register 4 players
         for player_id in ['alice', 'bob', 'charlie', 'dave']:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         # Only alice and bob play a match
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         standings = standings_engine.compute_standings(sample_league_id)
@@ -247,26 +254,28 @@ class TestStandingsEngine:
         # Create league and players
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         for player_id in ['alice', 'bob']:
-            temp_db.register_player(player_id, sample_league_id, f'token-{player_id}', utc_now())
+            temp_db.register_player(player_id, sample_league_id, auth_token=f'token-{player_id}', registered_at=utc_now())
 
         # Round 1: Alice wins
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Round 2: Alice wins again
         temp_db.create_round('round-2', sample_league_id, 2)
-        temp_db.create_match('match-2', 'round-2', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-2', 'round-2', 'tic_tac_toe', players=['alice', 'bob'])
         temp_db.store_result(
             'result-2', 'match-2',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         standings = standings_engine.compute_standings(sample_league_id)

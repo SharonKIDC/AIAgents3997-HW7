@@ -59,7 +59,7 @@ class LeagueState:
         existing = self.database.get_league(self.league_id)
         if existing:
             self._status = LeagueStatus(existing['status'])
-            logger.info(f"Loaded existing league {self.league_id} with status {self._status}")
+            logger.info("Loaded existing league %s with status %s", self.league_id, self._status)
         else:
             # Create new league
             config_data = {
@@ -75,7 +75,7 @@ class LeagueState:
                 config_data
             )
             self._status = LeagueStatus.REGISTRATION
-            logger.info(f"Created new league {self.league_id}")
+            logger.info("Created new league %s", self.league_id)
 
     def transition_to(self, new_status: LeagueStatus) -> bool:
         """Transition league to a new status.
@@ -96,14 +96,14 @@ class LeagueState:
         }
 
         if new_status not in valid_transitions.get(self._status, []):
-            logger.error(f"Invalid transition from {self._status} to {new_status}")
+            logger.error("Invalid transition from %s to %s", self._status, new_status)
             return False
 
         # Update database
         self.database.update_league_status(self.league_id, new_status.value)
         old_status = self._status
         self._status = new_status
-        logger.info(f"League {self.league_id} transitioned from {old_status} to {new_status}")
+        logger.info("League %s transitioned from %s to %s", self.league_id, old_status, new_status)
         return True
 
     @property

@@ -132,7 +132,7 @@ def registered_league(temp_db, sample_league_id, auth_manager):
     referee_tokens = {}
     for ref_id in referee_ids:
         token = auth_manager.issue_token(ref_id, AgentType.REFEREE)
-        temp_db.register_referee(ref_id, sample_league_id, token, utc_now())
+        temp_db.register_referee(ref_id, sample_league_id, auth_token=token, registered_at=utc_now())
         referee_tokens[ref_id] = token
 
     # Register players
@@ -140,7 +140,7 @@ def registered_league(temp_db, sample_league_id, auth_manager):
     player_tokens = {}
     for player_id in player_ids:
         token = auth_manager.issue_token(player_id, AgentType.PLAYER)
-        temp_db.register_player(player_id, sample_league_id, token, utc_now())
+        temp_db.register_player(player_id, sample_league_id, auth_token=token, registered_at=utc_now())
         player_tokens[player_id] = token
 
     return {

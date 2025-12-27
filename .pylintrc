@@ -38,39 +38,8 @@ ignore-patterns=^\..*,
                 ^docs/development/
 
 [MESSAGES CONTROL]
+# No disables - all issues must be fixed
 disable=
-    missing-docstring,
-    too-few-public-methods,
-    too-many-arguments,
-    too-many-positional-arguments,
-    too-many-locals,
-    too-many-instance-attributes,
-    logging-fstring-interpolation,
-    logging-not-lazy,
-    protected-access,
-    broad-exception-caught,
-    raise-missing-from,
-    no-else-return,
-    unused-argument,
-    import-outside-toplevel,
-    redefined-builtin,
-    line-too-long,
-    duplicate-code,
-    invalid-name,
-    no-member,
-    unnecessary-pass,
-    redefined-outer-name,
-    broad-exception-raised,
-    useless-parent-delegation,
-    unspecified-encoding,
-    consider-using-with,
-    too-many-public-methods,
-    use-dict-literal,
-    unused-variable,
-    consider-using-sys-exit,
-    wrong-import-order,
-    unused-import,
-    f-string-without-interpolation
 
 [REPORTS]
 output-format=colorized
@@ -78,6 +47,8 @@ reports=no
 
 [BASIC]
 good-names=i,j,k,ex,e,_,id,db,op,fp,n,x,y,z,row,col
+# Allow HTTP method names (do_GET, do_POST, etc.) for BaseHTTPRequestHandler
+method-rgx=([a-z_][a-z0-9_]{2,30}|do_(GET|POST|PUT|DELETE|HEAD|OPTIONS))$
 
 [FORMAT]
 max-line-length=120
@@ -88,6 +59,7 @@ max-args=8
 max-attributes=14
 min-public-methods=1
 max-locals=18
+max-public-methods=30
 
 [LOGGING]
 logging-format-style=old

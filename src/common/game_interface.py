@@ -31,7 +31,7 @@ class GameInterface(ABC):
         This method sets up the initial game state, including determining
         the starting player.
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_current_player(self) -> str:
@@ -40,7 +40,7 @@ class GameInterface(ABC):
         Returns:
             Player ID of the current player
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_step_context(self) -> Dict[str, Any]:
@@ -52,7 +52,7 @@ class GameInterface(ABC):
         Returns:
             Step context dictionary for the current player
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def validate_move(self, move_payload: Dict[str, Any]) -> bool:
@@ -64,7 +64,7 @@ class GameInterface(ABC):
         Returns:
             True if move is valid, False otherwise
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def apply_move(self, move_payload: Dict[str, Any]) -> bool:
@@ -79,7 +79,7 @@ class GameInterface(ABC):
         Raises:
             ValueError: If move is invalid
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def is_terminal(self) -> bool:
@@ -88,7 +88,7 @@ class GameInterface(ABC):
         Returns:
             True if game is over (win, loss, or draw)
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_result(self) -> Dict[str, Any]:
@@ -102,7 +102,7 @@ class GameInterface(ABC):
                 - points: Dict mapping player_id to points earned
                 - winner: Player ID of winner, or None for draw
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_state_summary(self) -> Dict[str, Any]:
@@ -111,7 +111,7 @@ class GameInterface(ABC):
         Returns:
             Dictionary with game state information for logging/debugging
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_game_type(self) -> str:
@@ -120,7 +120,7 @@ class GameInterface(ABC):
         Returns:
             Game type string (e.g., 'tic_tac_toe')
         """
-        pass
+        raise NotImplementedError()
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get additional game metadata.

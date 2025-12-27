@@ -8,10 +8,23 @@ import json
 import sqlite3
 import threading
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .errors import DatabaseError
+
+
+@dataclass
+class PlayerRanking:
+    """Player ranking statistics for a standings snapshot."""
+
+    rank: int
+    points: int
+    wins: int
+    draws: int
+    losses: int
+    matches_played: int
 
 
 class LeagueDatabase:
@@ -47,7 +60,7 @@ class LeagueDatabase:
             conn.commit()
         except Exception as e:
             conn.rollback()
-            raise DatabaseError(f"Transaction failed: {str(e)}", error=str(e))
+            raise DatabaseError(f"Transaction failed: {str(e)}", error=str(e)) from e
 
     def initialize_schema(self):
         """Create all database tables if they don't exist."""
@@ -188,11 +201,16 @@ class LeagueDatabase:
         return None
 
     # Referee operations
-    def register_referee(self, referee_id: str, league_id: str, auth_token: str, registered_at: str, endpoint_url: str = None):
+    def register_referee(
+        self, referee_id: str, league_id: str, *,
+        auth_token: str, registered_at: str, endpoint_url: str = None
+    ):
         """Register a new referee."""
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO referees (referee_id, league_id, auth_token, endpoint_url, status, registered_at) VALUES (?, ?, ?, ?, ?, ?)',
+                '''INSERT INTO referees
+                   (referee_id, league_id, auth_token, endpoint_url, status, registered_at)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
                 (referee_id, league_id, auth_token, endpoint_url, 'REGISTERED', registered_at)
             )
 
@@ -222,11 +240,16 @@ class LeagueDatabase:
             )
 
     # Player operations
-    def register_player(self, player_id: str, league_id: str, auth_token: str, registered_at: str, endpoint_url: str = None):
+    def register_player(
+        self, player_id: str, league_id: str, *,
+        auth_token: str, registered_at: str, endpoint_url: str = None
+    ):
         """Register a new player."""
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO players (player_id, league_id, auth_token, endpoint_url, status, registered_at) VALUES (?, ?, ?, ?, ?, ?)',
+                '''INSERT INTO players
+                   (player_id, league_id, auth_token, endpoint_url, status, registered_at)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
                 (player_id, league_id, auth_token, endpoint_url, 'REGISTERED', registered_at)
             )
 
@@ -278,6 +301,7 @@ class LeagueDatabase:
         match_id: str,
         round_id: str,
         game_type: str,
+        *,
         players: List[str],
         status: str = 'PENDING'
     ):
@@ -336,6 +360,7 @@ class LeagueDatabase:
         self,
         result_id: str,
         match_id: str,
+        *,
         outcome: Dict[str, str],
         points: Dict[str, int],
         game_metadata: Optional[Dict[str, Any]],
@@ -344,8 +369,11 @@ class LeagueDatabase:
         """Store a match result."""
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO match_results (result_id, match_id, outcome, points, game_metadata, reported_at) VALUES (?, ?, ?, ?, ?, ?)',
-                (result_id, match_id, json.dumps(outcome), json.dumps(points), json.dumps(game_metadata) if game_metadata else None, reported_at)
+                '''INSERT INTO match_results
+                   (result_id, match_id, outcome, points, game_metadata, reported_at)
+                   VALUES (?, ?, ?, ?, ?, ?)''',
+                (result_id, match_id, json.dumps(outcome), json.dumps(points),
+                 json.dumps(game_metadata) if game_metadata else None, reported_at)
             )
 
     def get_result(self, match_id: str) -> Optional[Dict[str, Any]]:
@@ -395,18 +423,22 @@ class LeagueDatabase:
         self,
         snapshot_id: str,
         player_id: str,
-        rank: int,
-        points: int,
-        wins: int,
-        draws: int,
-        losses: int,
-        matches_played: int
+        ranking: PlayerRanking
     ):
-        """Store a player ranking in a snapshot."""
+        """Store a player ranking in a snapshot.
+
+        Args:
+            snapshot_id: Snapshot identifier
+            player_id: Player identifier
+            ranking: Player ranking statistics
+        """
         with self.transaction() as conn:
             conn.execute(
-                'INSERT INTO player_rankings (snapshot_id, player_id, rank, points, wins, draws, losses, matches_played) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                (snapshot_id, player_id, rank, points, wins, draws, losses, matches_played)
+                '''INSERT INTO player_rankings
+                   (snapshot_id, player_id, rank, points, wins, draws, losses, matches_played)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                (snapshot_id, player_id, ranking.rank, ranking.points, ranking.wins,
+                 ranking.draws, ranking.losses, ranking.matches_played)
             )
 
     def get_standings(self, league_id: str, round_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -414,7 +446,9 @@ class LeagueDatabase:
         # Find the most recent snapshot
         if round_id:
             cursor = self.conn.execute(
-                'SELECT * FROM standings_snapshots WHERE league_id = ? AND round_id = ? ORDER BY computed_at DESC LIMIT 1',
+                '''SELECT * FROM standings_snapshots
+                   WHERE league_id = ? AND round_id = ?
+                   ORDER BY computed_at DESC LIMIT 1''',
                 (league_id, round_id)
             )
         else:

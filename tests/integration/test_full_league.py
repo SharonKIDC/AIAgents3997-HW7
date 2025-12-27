@@ -92,10 +92,10 @@ class TestFullLeagueWorkflow:
                 temp_db.store_result(
                     f'result-{match_count}',
                     match_id,
-                    {players[0]: 'win', players[1]: 'loss'},
-                    {players[0]: 3, players[1]: 0},
-                    {'moves': 5},
-                    utc_now()
+                    outcome={players[0]: 'win', players[1]: 'loss'},
+                    points={players[0]: 3, players[1]: 0},
+                    game_metadata={'moves': 5},
+                    reported_at=utc_now()
                 )
 
                 temp_db.update_match_status(match_id, 'COMPLETED')
@@ -236,30 +236,33 @@ class TestFullLeagueWorkflow:
         temp_db.create_round('round-1', league_id, 1)
 
         # Match 1: alice vs bob (alice wins)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Match 2: alice vs charlie (draw)
-        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', ['alice', 'charlie'])
+        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', players=['alice', 'charlie'])
         temp_db.store_result(
             'result-2', 'match-2',
-            {'alice': 'draw', 'charlie': 'draw'},
-            {'alice': 1, 'charlie': 1},
-            None, utc_now()
+            outcome={'alice': 'draw', 'charlie': 'draw'},
+            points={'alice': 1, 'charlie': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Match 3: bob vs charlie (charlie wins)
-        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', ['bob', 'charlie'])
+        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', players=['bob', 'charlie'])
         temp_db.store_result(
             'result-3', 'match-3',
-            {'bob': 'loss', 'charlie': 'win'},
-            {'bob': 0, 'charlie': 3},
-            None, utc_now()
+            outcome={'bob': 'loss', 'charlie': 'win'},
+            points={'bob': 0, 'charlie': 3},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         # Compute standings

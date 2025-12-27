@@ -152,7 +152,7 @@ class TestAuthManager:
             try:
                 token = auth_manager.issue_token(agent_id, AgentType.PLAYER)
                 tokens[agent_id] = token
-            except Exception as e:
+            except (ValueError, KeyError, RuntimeError) as e:
                 errors.append(e)
 
         threads = [

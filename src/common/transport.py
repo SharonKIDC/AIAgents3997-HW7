@@ -19,6 +19,7 @@ from .protocol import (
     JSONRPCRequest,
     JSONRPCResponse,
     create_error_response,
+    generate_message_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,7 +90,15 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
                         request_id=request.id
                     )
                     self._send_json_response(response.to_dict())
-                except Exception as e:
+                except (ValueError, KeyError, TypeError) as e:
+                    logger.error("Invalid request or response: %s", e)
+                    response = create_error_response(
+                        ErrorCode.INTERNAL_ERROR,
+                        f"Request handling error: {str(e)}",
+                        request_id=request.id
+                    )
+                    self._send_json_response(response.to_dict())
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     logger.exception("Unexpected error handling request")
                     response = create_error_response(
                         ErrorCode.INTERNAL_ERROR,
@@ -105,8 +114,11 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
                 )
                 self._send_json_response(response.to_dict())
 
-        except Exception as e:
-            logger.exception("Error processing request")
+        except (OSError, ValueError) as e:
+            logger.error("Error processing request: %s", e)
+            self.send_error(500, str(e))
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.exception("Unexpected error processing request")
             self.send_error(500, str(e))
 
     def do_GET(self):
@@ -139,9 +151,14 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_body)
 
-    def log_message(self, format, *args):
-        """Override to use standard logging."""
-        logger.info(format % args)
+    def log_message(self, format: str, *args: Any) -> None:  # pylint: disable=redefined-builtin
+        """Override to use standard logging.
+
+        Args:
+            format: Format string
+            *args: Format arguments
+        """
+        logger.info(format, *args)
 
 
 class LeagueHTTPServer:
@@ -188,7 +205,7 @@ class LeagueHTTPServer:
         """Start the server in a background thread."""
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
-        logger.info(f"HTTP server started on {self.host}:{self.port}")
+        logger.info("HTTP server started on %s:%s", self.host, self.port)
 
     def stop(self):
         """Stop the server."""
@@ -196,7 +213,7 @@ class LeagueHTTPServer:
             self.server.shutdown()
             if self.thread:
                 self.thread.join()
-            logger.info(f"HTTP server stopped on {self.host}:{self.port}")
+            logger.info("HTTP server stopped on %s:%s", self.host, self.port)
 
 
 class LeagueHTTPClient:
@@ -231,8 +248,6 @@ class LeagueHTTPClient:
         Raises:
             LeagueError: If request fails or returns an error
         """
-        from .protocol import generate_message_id
-
         if request_id is None:
             request_id = generate_message_id()
 
@@ -293,17 +308,17 @@ class LeagueHTTPClient:
             raise ProtocolError(
                 ErrorCode.COMMUNICATION_ERROR,
                 f"Connection error: {str(e)}"
-            )
+            ) from e
         except http.client.HTTPException as e:
             raise ProtocolError(
                 ErrorCode.INTERNAL_ERROR,
                 f"HTTP error: {str(e)}"
-            )
+            ) from e
         except json.JSONDecodeError as e:
             raise ProtocolError(
                 ErrorCode.INVALID_JSON_RPC,
                 f"Invalid JSON response: {str(e)}"
-            )
+            ) from e
         finally:
             if 'conn' in locals():
                 conn.close()
@@ -326,5 +341,7 @@ class LeagueHTTPClient:
         """
         try:
             self.send_request(url, envelope, payload)
-        except Exception as e:
-            logger.warning(f"Fire-and-forget request failed: {e}")
+        except (LeagueError, ProtocolError) as e:
+            logger.warning("Fire-and-forget request failed: %s", e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Unexpected error in fire-and-forget request")

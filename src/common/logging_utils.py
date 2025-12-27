@@ -36,6 +36,7 @@ class AuditLogger:
         """Open the audit log file for appending."""
         with self._lock:
             if self._file is None:
+                # pylint: disable=consider-using-with
                 self._file = open(self.log_path, 'a', encoding='utf-8')
 
     def close(self):

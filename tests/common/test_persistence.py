@@ -3,6 +3,7 @@
 This module tests all database operations for the league system.
 """
 
+from src.common.persistence import PlayerRanking
 from src.common.protocol import utc_now
 
 
@@ -68,8 +69,8 @@ class TestRefereeOperations:
         temp_db.register_referee(
             'ref-1',
             sample_league_id,
-            'token-123',
-            utc_now()
+            auth_token='token-123',
+            registered_at=utc_now()
         )
 
         referee = temp_db.get_referee('ref-1')
@@ -81,8 +82,8 @@ class TestRefereeOperations:
         """Test getting all referees for a league."""
         temp_db.create_league(sample_league_id, 'REGISTRATION', utc_now(), {})
 
-        temp_db.register_referee('ref-1', sample_league_id, 'token-1', utc_now())
-        temp_db.register_referee('ref-2', sample_league_id, 'token-2', utc_now())
+        temp_db.register_referee('ref-1', sample_league_id, auth_token='token-1', registered_at=utc_now())
+        temp_db.register_referee('ref-2', sample_league_id, auth_token='token-2', registered_at=utc_now())
 
         referees = temp_db.get_all_referees(sample_league_id)
         assert len(referees) == 2
@@ -91,7 +92,7 @@ class TestRefereeOperations:
     def test_update_referee_status(self, temp_db, sample_league_id):
         """Test updating referee status."""
         temp_db.create_league(sample_league_id, 'REGISTRATION', utc_now(), {})
-        temp_db.register_referee('ref-1', sample_league_id, 'token-1', utc_now())
+        temp_db.register_referee('ref-1', sample_league_id, auth_token='token-1', registered_at=utc_now())
 
         temp_db.update_referee_status('ref-1', 'ACTIVE')
 
@@ -109,8 +110,8 @@ class TestPlayerOperations:
         temp_db.register_player(
             'alice',
             sample_league_id,
-            'token-abc',
-            utc_now()
+            auth_token='token-abc',
+            registered_at=utc_now()
         )
 
         player = temp_db.get_player('alice')
@@ -122,9 +123,9 @@ class TestPlayerOperations:
         """Test getting all players for a league."""
         temp_db.create_league(sample_league_id, 'REGISTRATION', utc_now(), {})
 
-        temp_db.register_player('alice', sample_league_id, 'token-1', utc_now())
-        temp_db.register_player('bob', sample_league_id, 'token-2', utc_now())
-        temp_db.register_player('charlie', sample_league_id, 'token-3', utc_now())
+        temp_db.register_player('alice', sample_league_id, auth_token='token-1', registered_at=utc_now())
+        temp_db.register_player('bob', sample_league_id, auth_token='token-2', registered_at=utc_now())
+        temp_db.register_player('charlie', sample_league_id, auth_token='token-3', registered_at=utc_now())
 
         players = temp_db.get_all_players(sample_league_id)
         assert len(players) == 3
@@ -133,7 +134,7 @@ class TestPlayerOperations:
     def test_update_player_status(self, temp_db, sample_league_id):
         """Test updating player status."""
         temp_db.create_league(sample_league_id, 'REGISTRATION', utc_now(), {})
-        temp_db.register_player('alice', sample_league_id, 'token-1', utc_now())
+        temp_db.register_player('alice', sample_league_id, auth_token='token-1', registered_at=utc_now())
 
         temp_db.update_player_status('alice', 'SUSPENDED')
 
@@ -186,8 +187,8 @@ class TestMatchOperations:
             'match-1',
             'round-1',
             'tic_tac_toe',
-            ['alice', 'bob'],
-            'PENDING'
+            players=['alice', 'bob'],
+            status='PENDING'
         )
 
         match = temp_db.get_match('match-1')
@@ -199,9 +200,9 @@ class TestMatchOperations:
     def test_assign_match(self, temp_db, sample_league_id):
         """Test assigning a match to a referee."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
-        temp_db.register_referee('ref-1', sample_league_id, 'token', utc_now())
+        temp_db.register_referee('ref-1', sample_league_id, auth_token='token', registered_at=utc_now())
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
 
         temp_db.assign_match('match-1', 'ref-1', utc_now())
 
@@ -213,7 +214,7 @@ class TestMatchOperations:
         """Test updating match status."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
 
         temp_db.update_match_status('match-1', 'IN_PROGRESS')
 
@@ -224,9 +225,9 @@ class TestMatchOperations:
         """Test getting pending matches."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'], 'PENDING')
-        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', ['charlie', 'dave'], 'PENDING')
-        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', ['alice', 'charlie'], 'COMPLETED')
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'], status='PENDING')
+        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', players=['charlie', 'dave'], status='PENDING')
+        temp_db.create_match('match-3', 'round-1', 'tic_tac_toe', players=['alice', 'charlie'], status='COMPLETED')
 
         pending = temp_db.get_pending_matches(sample_league_id)
         assert len(pending) == 2
@@ -240,15 +241,15 @@ class TestResultOperations:
         """Test storing a match result."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
 
         temp_db.store_result(
             'result-1',
             'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            {'moves': 5},
-            utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata={'moves': 5},
+            reported_at=utc_now()
         )
 
         result = temp_db.get_result('match-1')
@@ -260,20 +261,22 @@ class TestResultOperations:
         """Test getting all results for a league."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
         temp_db.create_round('round-1', sample_league_id, 1)
-        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', ['alice', 'bob'])
-        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', ['charlie', 'dave'])
+        temp_db.create_match('match-1', 'round-1', 'tic_tac_toe', players=['alice', 'bob'])
+        temp_db.create_match('match-2', 'round-1', 'tic_tac_toe', players=['charlie', 'dave'])
 
         temp_db.store_result(
             'result-1', 'match-1',
-            {'alice': 'win', 'bob': 'loss'},
-            {'alice': 3, 'bob': 0},
-            None, utc_now()
+            outcome={'alice': 'win', 'bob': 'loss'},
+            points={'alice': 3, 'bob': 0},
+            game_metadata=None,
+            reported_at=utc_now()
         )
         temp_db.store_result(
             'result-2', 'match-2',
-            {'charlie': 'draw', 'dave': 'draw'},
-            {'charlie': 1, 'dave': 1},
-            None, utc_now()
+            outcome={'charlie': 'draw', 'dave': 'draw'},
+            points={'charlie': 1, 'dave': 1},
+            game_metadata=None,
+            reported_at=utc_now()
         )
 
         results = temp_db.get_all_results(sample_league_id)
@@ -306,18 +309,20 @@ class TestStandingsOperations:
     def test_store_player_ranking(self, temp_db, sample_league_id):
         """Test storing player rankings."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
-        temp_db.register_player('alice', sample_league_id, 'token', utc_now())
+        temp_db.register_player('alice', sample_league_id, auth_token='token', registered_at=utc_now())
         temp_db.create_standings_snapshot('snapshot-1', sample_league_id, None, utc_now())
 
         temp_db.store_player_ranking(
             'snapshot-1',
             'alice',
-            rank=1,
-            points=6,
-            wins=2,
-            draws=0,
-            losses=0,
-            matches_played=2
+            PlayerRanking(
+                rank=1,
+                points=6,
+                wins=2,
+                draws=0,
+                losses=0,
+                matches_played=2
+            )
         )
 
         # Verify ranking exists
@@ -333,12 +338,12 @@ class TestStandingsOperations:
     def test_get_standings(self, temp_db, sample_league_id):
         """Test getting standings."""
         temp_db.create_league(sample_league_id, 'ACTIVE', utc_now(), {})
-        temp_db.register_player('alice', sample_league_id, 'token-1', utc_now())
-        temp_db.register_player('bob', sample_league_id, 'token-2', utc_now())
+        temp_db.register_player('alice', sample_league_id, auth_token='token-1', registered_at=utc_now())
+        temp_db.register_player('bob', sample_league_id, auth_token='token-2', registered_at=utc_now())
 
         temp_db.create_standings_snapshot('snapshot-1', sample_league_id, None, utc_now())
-        temp_db.store_player_ranking('snapshot-1', 'alice', 1, 6, 2, 0, 0, 2)
-        temp_db.store_player_ranking('snapshot-1', 'bob', 2, 3, 1, 0, 1, 2)
+        temp_db.store_player_ranking('snapshot-1', 'alice', PlayerRanking(rank=1, points=6, wins=2, draws=0, losses=0, matches_played=2))
+        temp_db.store_player_ranking('snapshot-1', 'bob', PlayerRanking(rank=2, points=3, wins=1, draws=0, losses=1, matches_played=2))
 
         standings = temp_db.get_standings(sample_league_id)
         assert standings is not None
@@ -364,6 +369,7 @@ class TestTransactions:
 
     def test_transaction_rollback_on_error(self, temp_db, sample_league_id):
         """Test that transaction rolls back on error."""
+        from src.common.errors import DatabaseError
         try:
             with temp_db.transaction():
                 temp_db.conn.execute(
@@ -371,8 +377,8 @@ class TestTransactions:
                     (sample_league_id, 'REGISTRATION', utc_now(), '{}')
                 )
                 # Force an error
-                raise Exception('Test error')
-        except Exception:
+                raise ValueError('Test error')
+        except DatabaseError:
             pass
 
         # Verify data was NOT committed

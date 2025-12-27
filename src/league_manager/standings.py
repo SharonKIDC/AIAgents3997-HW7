@@ -9,7 +9,7 @@ import uuid
 from collections import defaultdict
 from typing import Any, Dict
 
-from ..common.persistence import LeagueDatabase
+from ..common.persistence import LeagueDatabase, PlayerRanking
 from ..common.protocol import utc_now
 
 logger = logging.getLogger(__name__)
@@ -125,7 +125,7 @@ class StandingsEngine:
             'standings': rankings
         }
 
-        logger.info(f"Computed standings for league {league_id}: {len(rankings)} players")
+        logger.info("Computed standings for league %s: %s players", league_id, len(rankings))
         return standings_data
 
     def publish_standings(
@@ -159,15 +159,17 @@ class StandingsEngine:
             self.database.store_player_ranking(
                 snapshot_id,
                 ranking['player_id'],
-                ranking['rank'],
-                ranking['points'],
-                ranking['wins'],
-                ranking['draws'],
-                ranking['losses'],
-                ranking['matches_played']
+                PlayerRanking(
+                    rank=ranking['rank'],
+                    points=ranking['points'],
+                    wins=ranking['wins'],
+                    draws=ranking['draws'],
+                    losses=ranking['losses'],
+                    matches_played=ranking['matches_played']
+                )
             )
 
-        logger.info(f"Published standings snapshot {snapshot_id}")
+        logger.info("Published standings snapshot %s", snapshot_id)
         return snapshot_id
 
     def get_standings(

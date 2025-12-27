@@ -3,49 +3,29 @@
 This module provides the command-line interface for starting a player.
 """
 
-import argparse
-import sys
-import time
-
+from ..common.cli_helpers import (
+    add_host_port_args,
+    add_league_manager_url_arg,
+    add_log_level_arg,
+    create_agent_parser,
+    run_agent_server,
+)
 from ..common.logging_utils import setup_application_logging
 from .server import PlayerServer
 
 
 def main():
     """Main entry point for Player."""
-    parser = argparse.ArgumentParser(description="Agent League System - Player")
-    parser.add_argument(
-        "player_id",
-        help="Unique player identifier"
-    )
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Host to bind to (default: localhost)"
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=9001,
-        help="Port to bind to (default: 9001)"
-    )
-    parser.add_argument(
-        "--league-manager-url",
-        default="http://localhost:8000/mcp",
-        help="League Manager URL (default: http://localhost:8000/mcp)"
-    )
+    parser = create_agent_parser("Agent League System - Player", "player")
+    add_host_port_args(parser, default_port=9001)
+    add_league_manager_url_arg(parser)
     parser.add_argument(
         "--strategy",
         choices=["smart", "random"],
         default="smart",
         help="Strategy to use (default: smart)"
     )
-    parser.add_argument(
-        "--log-level",
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level (default: INFO)"
-    )
+    add_log_level_arg(parser)
 
     args = parser.parse_args()
 
@@ -56,38 +36,17 @@ def main():
         f"player.{args.player_id}"
     )
 
-    # Create and start server
+    # Create server
     server = PlayerServer(
         args.player_id,
         args.host,
         args.port,
-        args.league_manager_url,
-        args.strategy
+        league_manager_url=args.league_manager_url,
+        strategy_type=args.strategy
     )
 
-    try:
-        server.start()
-
-        # Register with League Manager
-        if not server.register():
-            logger.error("Failed to register with League Manager")
-            sys.exit(1)
-
-        # Send ready signal (agent is initialized and ready for matches)
-        if not server.send_ready():
-            logger.error("Failed to send ready signal to League Manager")
-            sys.exit(1)
-
-        logger.info("Player is running and ACTIVE. Press Ctrl+C to stop.")
-
-        # Keep running
-        while True:
-            time.sleep(1)
-
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-    finally:
-        server.stop()
+    # Run server with standard startup/shutdown logic
+    run_agent_server(server, logger, "Player")
 
 
 if __name__ == "__main__":

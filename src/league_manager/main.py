@@ -5,8 +5,8 @@ This module provides the command-line interface for starting the League Manager.
 
 import argparse
 import sys
-import time
 
+from ..common.cli_helpers import add_host_port_args, add_log_level_arg, run_server_loop
 from ..common.config import load_config
 from ..common.logging_utils import AuditLogger, setup_application_logging
 from ..common.persistence import LeagueDatabase
@@ -16,36 +16,24 @@ from .server import LeagueManagerServer
 def main():
     """Main entry point for League Manager."""
     parser = argparse.ArgumentParser(description="Agent League System - League Manager")
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Host to bind to (default: localhost)"
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port to bind to (default: 8000)"
-    )
+    add_host_port_args(parser, default_port=8000)
     parser.add_argument(
         "--config-dir",
         default="./config",
         help="Configuration directory (default: ./config)"
     )
-    parser.add_argument(
-        "--log-level",
-        default="INFO",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level (default: INFO)"
-    )
+    add_log_level_arg(parser)
 
     args = parser.parse_args()
 
     # Load configuration
     try:
         config = load_config(args.config_dir)
-    except Exception as e:
+    except (FileNotFoundError, ValueError, KeyError) as e:
         print(f"Error loading configuration: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        print(f"Unexpected error loading configuration: {e}", file=sys.stderr)
         sys.exit(1)
 
     # Setup logging
@@ -71,25 +59,23 @@ def main():
     server = LeagueManagerServer(
         args.host,
         args.port,
-        config,
-        database,
-        audit_logger
+        config=config,
+        database=database,
+        audit_logger=audit_logger
     )
 
-    try:
-        server.start()
-        logger.info("League Manager is running. Press Ctrl+C to stop.")
+    # Start server
+    server.start()
 
-        # Keep running
-        while True:
-            time.sleep(1)
-
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-    finally:
+    # Define cleanup function
+    def cleanup():
+        """Clean up resources on shutdown."""
         server.stop()
         audit_logger.close()
         database.close()
+
+    # Run server loop
+    run_server_loop(logger, "League Manager is running", cleanup)
 
 
 if __name__ == "__main__":

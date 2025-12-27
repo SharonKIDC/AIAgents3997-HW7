@@ -110,7 +110,7 @@ class ConfigManager:
             )
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
 
             # Parse league settings
@@ -165,12 +165,12 @@ class ConfigManager:
             raise ConfigurationError(
                 f"Invalid YAML in configuration: {str(e)}",
                 path=str(config_path)
-            )
+            ) from e
         except Exception as e:
             raise ConfigurationError(
                 f"Error loading configuration: {str(e)}",
                 path=str(config_path)
-            )
+            ) from e
 
     def load_game_registry(self, filename: str = "game_registry.yaml"):
         """Load game registry configuration.
@@ -196,7 +196,7 @@ class ConfigManager:
             return
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
 
             games_data = data.get('games', [])
@@ -214,7 +214,7 @@ class ConfigManager:
             raise ConfigurationError(
                 f"Error loading game registry: {str(e)}",
                 path=str(config_path)
-            )
+            ) from e
 
     def get_game_config(self, game_type: str) -> Optional[GameConfig]:
         """Get configuration for a specific game type.

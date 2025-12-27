@@ -191,12 +191,11 @@ class TicTacToeGame(GameInterface):
         winner = self.check_winner()
         if winner == Mark.X.value:
             return GameOutcome.X_WINS
-        elif winner == Mark.O.value:
+        if winner == Mark.O.value:
             return GameOutcome.O_WINS
-        elif self.is_board_full():
+        if self.is_board_full():
             return GameOutcome.DRAW
-        else:
-            return GameOutcome.IN_PROGRESS
+        return GameOutcome.IN_PROGRESS
 
     def is_terminal(self) -> bool:
         """Check if game is in terminal state.
@@ -264,7 +263,7 @@ class TicTacToeGame(GameInterface):
                 },
                 'winner': self.player_x
             }
-        elif outcome == GameOutcome.O_WINS:
+        if outcome == GameOutcome.O_WINS:
             return {
                 'outcome': {
                     self.player_x: 'loss',
@@ -276,18 +275,18 @@ class TicTacToeGame(GameInterface):
                 },
                 'winner': self.player_o
             }
-        else:  # Draw
-            return {
-                'outcome': {
-                    self.player_x: 'draw',
-                    self.player_o: 'draw'
-                },
-                'points': {
-                    self.player_x: 1,
-                    self.player_o: 1
-                },
-                'winner': None
-            }
+        # Draw
+        return {
+            'outcome': {
+                self.player_x: 'draw',
+                self.player_o: 'draw'
+            },
+            'points': {
+                self.player_x: 1,
+                self.player_o: 1
+            },
+            'winner': None
+        }
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get additional game metadata.

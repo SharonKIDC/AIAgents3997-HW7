@@ -5,6 +5,7 @@ This module tests player move computation strategies.
 
 import pytest
 
+from src.common.tic_tac_toe_utils import would_win
 from src.player.strategies.tic_tac_toe_random import TicTacToeRandomStrategy
 from src.player.strategies.tic_tac_toe_smart import TicTacToeSmartStrategy
 
@@ -166,51 +167,43 @@ class TestTicTacToeStrategy:
 
     def test_would_win_horizontal(self):
         """Test detecting horizontal win."""
-        strategy = TicTacToeStrategy('alice')
-
         board = [
             ['X', 'X', ''],
             ['', '', ''],
             ['', '', '']
         ]
 
-        assert strategy._would_win(board, 0, 2, 'X')
+        assert would_win(board, 0, 2, 'X')
 
     def test_would_win_vertical(self):
         """Test detecting vertical win."""
-        strategy = TicTacToeStrategy('alice')
-
         board = [
             ['X', '', ''],
             ['X', '', ''],
             ['', '', '']
         ]
 
-        assert strategy._would_win(board, 2, 0, 'X')
+        assert would_win(board, 2, 0, 'X')
 
     def test_would_win_diagonal(self):
         """Test detecting diagonal win."""
-        strategy = TicTacToeStrategy('alice')
-
         board = [
             ['X', '', ''],
             ['', 'X', ''],
             ['', '', '']
         ]
 
-        assert strategy._would_win(board, 2, 2, 'X')
+        assert would_win(board, 2, 2, 'X')
 
     def test_would_win_anti_diagonal(self):
         """Test detecting anti-diagonal win."""
-        strategy = TicTacToeStrategy('alice')
-
         board = [
             ['', '', 'X'],
             ['', 'X', ''],
             ['', '', '']
         ]
 
-        assert strategy._would_win(board, 2, 0, 'X')
+        assert would_win(board, 2, 0, 'X')
 
     def test_different_players_get_different_marks(self):
         """Test that strategy works for both X and O."""

@@ -42,14 +42,14 @@ class RegistrationHandler:
     def register_referee(
         self,
         referee_id: str,
-        envelope: Envelope,
+        _envelope: Envelope,
         endpoint_url: str = None
     ) -> Dict[str, Any]:
         """Register a referee with the league.
 
         Args:
             referee_id: Unique referee identifier
-            envelope: Request envelope
+            _envelope: Request envelope (unused but required by handler interface)
             endpoint_url: Referee's endpoint URL for receiving match assignments
 
         Returns:
@@ -75,12 +75,12 @@ class RegistrationHandler:
         self.database.register_referee(
             referee_id,
             self.league_state.league_id,
-            auth_token,
-            utc_now(),
-            endpoint_url
+            auth_token=auth_token,
+            registered_at=utc_now(),
+            endpoint_url=endpoint_url
         )
 
-        logger.info(f"Registered referee: {referee_id} at {endpoint_url}")
+        logger.info("Registered referee: %s at %s", referee_id, endpoint_url)
 
         return {
             'status': 'registered',
@@ -91,14 +91,14 @@ class RegistrationHandler:
     def register_player(
         self,
         player_id: str,
-        envelope: Envelope,
+        _envelope: Envelope,
         endpoint_url: str = None
     ) -> Dict[str, Any]:
         """Register a player with the league.
 
         Args:
             player_id: Unique player identifier
-            envelope: Request envelope
+            _envelope: Request envelope (unused but required by handler interface)
             endpoint_url: Player's endpoint URL for receiving game invitations
 
         Returns:
@@ -132,12 +132,12 @@ class RegistrationHandler:
         self.database.register_player(
             player_id,
             self.league_state.league_id,
-            auth_token,
-            utc_now(),
-            endpoint_url
+            auth_token=auth_token,
+            registered_at=utc_now(),
+            endpoint_url=endpoint_url
         )
 
-        logger.info(f"Registered player: {player_id} at {endpoint_url}")
+        logger.info("Registered player: %s at %s", player_id, endpoint_url)
 
         return {
             'status': 'registered',

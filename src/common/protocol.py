@@ -6,7 +6,7 @@ message type definitions, and validation rules as specified in the PRD.
 
 import re
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, Optional
@@ -117,12 +117,12 @@ class Envelope:
         # Validate message type
         try:
             MessageType(data['message_type'])
-        except ValueError:
+        except ValueError as exc:
             raise ProtocolError(
                 ErrorCode.INVALID_MESSAGE_TYPE,
                 f"Unknown message type: {data['message_type']}",
                 {"message_type": data['message_type']}
-            )
+            ) from exc
 
         # Validate sender format
         validate_sender_format(data['sender'])
@@ -133,7 +133,8 @@ class Envelope:
         # Validate conversation_id format
         validate_uuid(data['conversation_id'], 'conversation_id')
 
-        return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
+        field_names = {field.name for field in fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in field_names})
 
 
 def validate_sender_format(sender: str) -> None:
@@ -185,7 +186,7 @@ def validate_timestamp(timestamp: str) -> None:
             f"Invalid timestamp format: {timestamp}",
             field="timestamp",
             error=str(e)
-        )
+        ) from e
 
 
 def validate_uuid(value: str, field_name: str) -> None:
@@ -200,11 +201,11 @@ def validate_uuid(value: str, field_name: str) -> None:
     """
     try:
         uuid.UUID(value)
-    except ValueError:
+    except ValueError as exc:
         raise ValidationError(
             f"Invalid UUID format for {field_name}: {value}",
             field=field_name
-        )
+        ) from exc
 
 
 @dataclass

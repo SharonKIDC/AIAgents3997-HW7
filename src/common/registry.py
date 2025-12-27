@@ -33,10 +33,10 @@ class Registry:
             ValueError: If key is already registered
         """
         if key in self._registry:
-            logger.warning(f"{self.name}: Overwriting existing registration for '{key}'")
+            logger.warning("%s: Overwriting existing registration for '%s'", self.name, key)
 
         self._registry[key] = cls
-        logger.debug(f"{self.name}: Registered '{key}' -> {cls.__name__}")
+        logger.debug("%s: Registered '%s' -> %s", self.name, key, cls.__name__)
 
     def get(self, key: str) -> Optional[Type]:
         """Get a registered class.
@@ -91,7 +91,7 @@ class Registry:
     def clear(self) -> None:
         """Clear all registrations."""
         self._registry.clear()
-        logger.debug(f"{self.name}: Cleared all registrations")
+        logger.debug("%s: Cleared all registrations", self.name)
 
 
 class StrategyRegistry(Registry):

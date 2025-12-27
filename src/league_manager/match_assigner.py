@@ -76,10 +76,12 @@ class MatchAssigner:
                 )
                 assignments.append(assignment_info)
                 referee_idx += 1
-            except Exception as e:
-                logger.error(f"Failed to assign match {match['match_id']} to referee {referee_id}: {e}")
+            except OperationalError as e:
+                logger.error("Failed to assign match %s to referee %s: %s", match['match_id'], referee_id, e)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Unexpected error assigning match %s to referee %s", match['match_id'], referee_id)
 
-        logger.info(f"Assigned {len(assignments)} matches to referees")
+        logger.info("Assigned %s matches to referees", len(assignments))
         return assignments
 
     def assign_match(
@@ -143,7 +145,7 @@ class MatchAssigner:
             if player and player.get('endpoint_url'):
                 player_endpoints[player_id] = player['endpoint_url']
             else:
-                logger.warning(f"Player {player_id} has no endpoint URL")
+                logger.warning("Player %s has no endpoint URL", player_id)
 
         payload = {
             'match_id': match_id,
@@ -156,13 +158,13 @@ class MatchAssigner:
         # Send to referee
         try:
             self.http_client.send_request(referee_url, envelope, payload)
-            logger.info(f"Sent match assignment {match_id} to referee {referee_id} at {referee_url}")
+            logger.info("Sent match assignment %s to referee %s at %s", match_id, referee_id, referee_url)
         except Exception as e:
-            logger.error(f"Failed to send match assignment to referee {referee_id}: {e}")
+            logger.error("Failed to send match assignment to referee %s: %s", referee_id, e)
             raise OperationalError(
                 ErrorCode.COMMUNICATION_ERROR,
                 f"Failed to send assignment to referee: {str(e)}"
-            )
+            ) from e
 
         return {
             'match_id': match_id,
@@ -180,7 +182,7 @@ class MatchAssigner:
             referee_id: Referee identifier
         """
         self._referee_availability[referee_id] = False
-        logger.debug(f"Referee {referee_id} marked as busy")
+        logger.debug("Referee %s marked as busy", referee_id)
 
     def mark_referee_idle(self, referee_id: str):
         """Mark a referee as idle (available for assignment).
@@ -189,7 +191,7 @@ class MatchAssigner:
             referee_id: Referee identifier
         """
         self._referee_availability[referee_id] = True
-        logger.debug(f"Referee {referee_id} marked as idle")
+        logger.debug("Referee %s marked as idle", referee_id)
 
     def is_referee_available(self, referee_id: str) -> bool:
         """Check if a referee is available for assignment.

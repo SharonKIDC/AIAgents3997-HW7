@@ -41,7 +41,7 @@ class StrategyInterface(ABC):
         Raises:
             ValueError: If no valid moves are available or context is invalid
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_strategy_name(self) -> str:
@@ -50,7 +50,7 @@ class StrategyInterface(ABC):
         Returns:
             Human-readable strategy name
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def get_supported_games(self) -> list:
@@ -59,4 +59,4 @@ class StrategyInterface(ABC):
         Returns:
             List of game type identifiers (e.g., ['tic_tac_toe'])
         """
-        pass
+        raise NotImplementedError()

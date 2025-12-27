@@ -7,7 +7,13 @@ specified in the PRD, delegating game-specific logic to game engines.
 import logging
 from typing import Any, Dict
 
-from ..common.errors import ErrorCode, OperationalError, TimeoutError
+from ..common.errors import (
+    ErrorCode,
+    LeagueError,
+    MatchTimeoutError,
+    OperationalError,
+    ProtocolError
+)
 from ..common.protocol import Envelope, MessageType, generate_conversation_id, utc_now
 from ..common.transport import LeagueHTTPClient
 from .games import get_game
@@ -43,8 +49,9 @@ class MatchExecutor:
         match_id: str,
         round_id: str,
         game_type: str,
+        *,
         players: list,
-        league_id: str
+        _league_id: str
     ) -> Dict[str, Any]:
         """Execute a complete match.
 
@@ -53,22 +60,22 @@ class MatchExecutor:
             round_id: Round identifier
             game_type: Game type
             players: List of player IDs
-            league_id: League identifier
+            _league_id: League identifier (unused but required by interface)
 
         Returns:
             Match result dictionary
         """
-        logger.info(f"Starting match {match_id}: {players[0]} vs {players[1]}")
+        logger.info("Starting match %s: %s vs %s", match_id, players[0], players[1])
 
         # Initialize game using registry
         try:
             game = get_game(game_type, players)
-            logger.info(f"Loaded game: {game.get_game_type()}")
+            logger.info("Loaded game: %s", game.get_game_type())
         except ValueError as e:
             raise OperationalError(
                 ErrorCode.MATCH_EXECUTION_FAILED,
                 f"Unsupported game type: {game_type}. Error: {e}"
-            )
+            ) from e
 
         # Send game invitations
         for player_id in players:
@@ -90,8 +97,8 @@ class MatchExecutor:
                     current_player,
                     match_id,
                     game_type,
-                    game.move_count + 1,
-                    step_context
+                    step_number=game.move_count + 1,
+                    step_context=step_context
                 )
 
                 # Validate and apply move using the game interface
@@ -100,10 +107,14 @@ class MatchExecutor:
 
                 game.apply_move(move)
 
-                logger.debug(f"Player {current_player} played move: {move}")
+                logger.debug("Player %s played move: %s", current_player, move)
 
-            except Exception as e:
-                logger.error(f"Move error for player {current_player}: {e}")
+            except (OperationalError, MatchTimeoutError, ValueError) as e:
+                logger.error("Move error for player %s: %s", current_player, e)
+                # Forfeit - opponent wins
+                return self._create_forfeit_result(game, current_player)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception("Unexpected error during move for player %s", current_player)
                 # Forfeit - opponent wins
                 return self._create_forfeit_result(game, current_player)
 
@@ -142,7 +153,7 @@ class MatchExecutor:
         """
         url = self.player_urls.get(player_id)
         if not url:
-            logger.warning(f"No URL for player {player_id}")
+            logger.warning("No URL for player %s", player_id)
             return
 
         envelope = Envelope(
@@ -163,15 +174,18 @@ class MatchExecutor:
 
         try:
             self.http_client.send_request(url, envelope, payload)
-            logger.info(f"Sent game invitation to {player_id}")
-        except Exception as e:
-            logger.error(f"Failed to send invitation to {player_id}: {e}")
+            logger.info("Sent game invitation to %s", player_id)
+        except (LeagueError, ProtocolError) as e:
+            logger.error("Failed to send invitation to %s: %s", player_id, e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Unexpected error sending invitation to %s", player_id)
 
     def _request_move(
         self,
         player_id: str,
         match_id: str,
         game_type: str,
+        *,
         step_number: int,
         step_context: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -188,7 +202,7 @@ class MatchExecutor:
             Move payload from player
 
         Raises:
-            TimeoutError: If player doesn't respond in time
+            MatchTimeoutError: If player doesn't respond in time
         """
         url = self.player_urls.get(player_id)
         if not url:
@@ -217,7 +231,7 @@ class MatchExecutor:
             move_response = result.get('payload', {})
             return move_response.get('move_payload', {})
         except Exception as e:
-            raise TimeoutError(f"Player {player_id} failed to respond: {e}")
+            raise MatchTimeoutError(f"Player {player_id} failed to respond: {e}") from e
 
     def _send_game_over(
         self,
@@ -255,8 +269,10 @@ class MatchExecutor:
 
         try:
             self.http_client.send_request_no_response(url, envelope, payload)
-        except Exception as e:
-            logger.warning(f"Failed to send game over to {player_id}: {e}")
+        except (LeagueError, ProtocolError) as e:
+            logger.warning("Failed to send game over to %s: %s", player_id, e)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception("Unexpected error sending game over to %s", player_id)
 
     def _create_forfeit_result(
         self,

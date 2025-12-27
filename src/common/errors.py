@@ -87,12 +87,10 @@ class LeagueError(Exception):
 
 class ProtocolError(LeagueError):
     """Raised when protocol validation fails (4xx errors)."""
-    pass
 
 
 class OperationalError(LeagueError):
     """Raised when operational failures occur (5xx errors)."""
-    pass
 
 
 class ValidationError(ProtocolError):
@@ -153,7 +151,7 @@ class PreconditionFailedError(ProtocolError):
         super().__init__(ErrorCode.PRECONDITION_FAILED, message, details)
 
 
-class TimeoutError(OperationalError):
+class MatchTimeoutError(OperationalError):
     """Raised when an operation times out."""
 
     def __init__(self, message: str, timeout_ms: Optional[int] = None):
