@@ -51,12 +51,7 @@ class ErrorCode(IntEnum):
 class LeagueError(Exception):
     """Base exception for all league-related errors."""
 
-    def __init__(
-        self,
-        code: ErrorCode,
-        message: str,
-        details: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, code: ErrorCode, message: str, details: Optional[Dict[str, Any]] = None):
         """Initialize a league error.
 
         Args:
@@ -78,10 +73,7 @@ class LeagueError(Exception):
         return {
             "code": int(self.code),
             "message": self.message,
-            "data": {
-                "error_code": self.code.name,
-                "details": self.details
-            }
+            "data": {"error_code": self.code.name, "details": self.details},
         }
 
 
@@ -128,9 +120,7 @@ class DuplicateRegistrationError(ProtocolError):
 
     def __init__(self, agent_id: str):
         super().__init__(
-            ErrorCode.DUPLICATE_REGISTRATION,
-            f"Agent {agent_id} is already registered",
-            {"agent_id": agent_id}
+            ErrorCode.DUPLICATE_REGISTRATION, f"Agent {agent_id} is already registered", {"agent_id": agent_id}
         )
 
 
@@ -138,10 +128,7 @@ class RegistrationClosedError(ProtocolError):
     """Raised when registration window has closed."""
 
     def __init__(self):
-        super().__init__(
-            ErrorCode.REGISTRATION_CLOSED,
-            "Registration window is closed"
-        )
+        super().__init__(ErrorCode.REGISTRATION_CLOSED, "Registration window is closed")
 
 
 class PreconditionFailedError(ProtocolError):

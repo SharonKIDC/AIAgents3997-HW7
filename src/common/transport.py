@@ -43,24 +43,20 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests to /mcp endpoint."""
-        if self.path != '/mcp':
+        if self.path != "/mcp":
             self.send_error(404, "Not Found")
             return
 
         try:
             # Read request body
-            content_length = int(self.headers.get('Content-Length', 0))
+            content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length)
 
             # Parse JSON
             try:
-                data = json.loads(body.decode('utf-8'))
+                data = json.loads(body.decode("utf-8"))
             except json.JSONDecodeError as e:
-                response = create_error_response(
-                    ErrorCode.INVALID_JSON_RPC,
-                    f"Invalid JSON: {str(e)}",
-                    request_id=None
-                )
+                response = create_error_response(ErrorCode.INVALID_JSON_RPC, f"Invalid JSON: {str(e)}", request_id=None)
                 self._send_json_response(response.to_dict())
                 return
 
@@ -69,10 +65,10 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
                 request = JSONRPCRequest.from_dict(data)
             except (ProtocolError, LeagueError) as e:
                 response = create_error_response(
-                    int(e.code) if hasattr(e, 'code') else ErrorCode.INVALID_JSON_RPC,
+                    int(e.code) if hasattr(e, "code") else ErrorCode.INVALID_JSON_RPC,
                     str(e),
-                    error_data=e.details if hasattr(e, 'details') else {},
-                    request_id=data.get('id')
+                    error_data=e.details if hasattr(e, "details") else {},
+                    request_id=data.get("id"),
                 )
                 self._send_json_response(response.to_dict())
                 return
@@ -84,33 +80,24 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
                     self._send_json_response(response.to_dict())
                 except LeagueError as e:
                     response = create_error_response(
-                        int(e.code),
-                        e.message,
-                        error_data=e.details,
-                        request_id=request.id
+                        int(e.code), e.message, error_data=e.details, request_id=request.id
                     )
                     self._send_json_response(response.to_dict())
                 except (ValueError, KeyError, TypeError) as e:
                     logger.error("Invalid request or response: %s", e)
                     response = create_error_response(
-                        ErrorCode.INTERNAL_ERROR,
-                        f"Request handling error: {str(e)}",
-                        request_id=request.id
+                        ErrorCode.INTERNAL_ERROR, f"Request handling error: {str(e)}", request_id=request.id
                     )
                     self._send_json_response(response.to_dict())
                 except Exception as e:  # pylint: disable=broad-exception-caught
                     logger.exception("Unexpected error handling request")
                     response = create_error_response(
-                        ErrorCode.INTERNAL_ERROR,
-                        f"Internal error: {str(e)}",
-                        request_id=request.id
+                        ErrorCode.INTERNAL_ERROR, f"Internal error: {str(e)}", request_id=request.id
                     )
                     self._send_json_response(response.to_dict())
             else:
                 response = create_error_response(
-                    ErrorCode.INTERNAL_ERROR,
-                    "No message handler configured",
-                    request_id=request.id
+                    ErrorCode.INTERNAL_ERROR, "No message handler configured", request_id=request.id
                 )
                 self._send_json_response(response.to_dict())
 
@@ -123,18 +110,18 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests for health checks."""
-        if self.path == '/health':
+        if self.path == "/health":
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
-        elif self.path == '/status':
+            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
+        elif self.path == "/status":
             # Status endpoint - handler should set this via server attribute
-            status = getattr(self.server, 'status_provider', lambda: {"status": "unknown"})()
+            status = getattr(self.server, "status_provider", lambda: {"status": "unknown"})()
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps(status).encode('utf-8'))
+            self.wfile.write(json.dumps(status).encode("utf-8"))
         else:
             self.send_error(404, "Not Found")
 
@@ -144,10 +131,10 @@ class LeagueHTTPHandler(BaseHTTPRequestHandler):
         Args:
             data: Dictionary to send as JSON
         """
-        response_body = json.dumps(data, indent=2).encode('utf-8')
+        response_body = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Content-Length', str(len(response_body)))
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(response_body)))
         self.end_headers()
         self.wfile.write(response_body)
 
@@ -173,7 +160,7 @@ class LeagueHTTPServer:
         host: str,
         port: int,
         message_handler: Callable[[JSONRPCRequest], JSONRPCResponse],
-        status_provider: Optional[Callable[[], Dict[str, Any]]] = None
+        status_provider: Optional[Callable[[], Dict[str, Any]]] = None,
     ):
         """Initialize the HTTP server.
 
@@ -190,11 +177,7 @@ class LeagueHTTPServer:
 
         # Create handler factory
         def handler_factory(*args, **kwargs):
-            return LeagueHTTPHandler(
-                *args,
-                message_handler=message_handler,
-                **kwargs
-            )
+            return LeagueHTTPHandler(*args, message_handler=message_handler, **kwargs)
 
         self.server = HTTPServer((host, port), handler_factory)
         if status_provider:
@@ -228,11 +211,7 @@ class LeagueHTTPClient:
         self.timeout = timeout
 
     def send_request(
-        self,
-        url: str,
-        envelope: Envelope,
-        payload: Dict[str, Any],
-        request_id: Optional[str] = None
+        self, url: str, envelope: Envelope, payload: Dict[str, Any], request_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Send a JSON-RPC request to another agent.
 
@@ -255,16 +234,13 @@ class LeagueHTTPClient:
         request = JSONRPCRequest(
             jsonrpc=JSONRPC_VERSION,
             method="league.handle",
-            params={
-                "envelope": envelope.to_dict(),
-                "payload": payload
-            },
-            id=request_id
+            params={"envelope": envelope.to_dict(), "payload": payload},
+            id=request_id,
         )
 
         # Parse URL
         parsed = urlparse(url)
-        host = parsed.hostname or 'localhost'
+        host = parsed.hostname or "localhost"
         port = parsed.port or 80
 
         try:
@@ -272,63 +248,43 @@ class LeagueHTTPClient:
             conn = http.client.HTTPConnection(host, port, timeout=self.timeout)
 
             # Send request
-            body = json.dumps(request.to_dict()).encode('utf-8')
-            headers = {
-                'Content-Type': 'application/json',
-                'Content-Length': str(len(body))
-            }
-            conn.request('POST', parsed.path or '/mcp', body, headers)
+            body = json.dumps(request.to_dict()).encode("utf-8")
+            headers = {"Content-Type": "application/json", "Content-Length": str(len(body))}
+            conn.request("POST", parsed.path or "/mcp", body, headers)
 
             # Get response
             response = conn.getresponse()
-            response_body = response.read().decode('utf-8')
+            response_body = response.read().decode("utf-8")
 
             # Parse response
             response_data = json.loads(response_body)
 
             # Check for JSON-RPC error
-            if 'error' in response_data:
-                error = response_data['error']
+            if "error" in response_data:
+                error = response_data["error"]
                 raise ProtocolError(
-                    ErrorCode(error.get('code', ErrorCode.INTERNAL_ERROR)),
-                    error.get('message', 'Unknown error'),
-                    error.get('data', {})
+                    ErrorCode(error.get("code", ErrorCode.INTERNAL_ERROR)),
+                    error.get("message", "Unknown error"),
+                    error.get("data", {}),
                 )
 
             # Extract result
-            if 'result' not in response_data:
-                raise ProtocolError(
-                    ErrorCode.INVALID_JSON_RPC,
-                    "Response missing 'result' field"
-                )
+            if "result" not in response_data:
+                raise ProtocolError(ErrorCode.INVALID_JSON_RPC, "Response missing 'result' field")
 
-            return response_data['result']
+            return response_data["result"]
 
         except (ConnectionRefusedError, ConnectionError, OSError) as e:
-            raise ProtocolError(
-                ErrorCode.COMMUNICATION_ERROR,
-                f"Connection error: {str(e)}"
-            ) from e
+            raise ProtocolError(ErrorCode.COMMUNICATION_ERROR, f"Connection error: {str(e)}") from e
         except http.client.HTTPException as e:
-            raise ProtocolError(
-                ErrorCode.INTERNAL_ERROR,
-                f"HTTP error: {str(e)}"
-            ) from e
+            raise ProtocolError(ErrorCode.INTERNAL_ERROR, f"HTTP error: {str(e)}") from e
         except json.JSONDecodeError as e:
-            raise ProtocolError(
-                ErrorCode.INVALID_JSON_RPC,
-                f"Invalid JSON response: {str(e)}"
-            ) from e
+            raise ProtocolError(ErrorCode.INVALID_JSON_RPC, f"Invalid JSON response: {str(e)}") from e
         finally:
-            if 'conn' in locals():
+            if "conn" in locals():
                 conn.close()
 
-    def send_request_no_response(
-        self,
-        url: str,
-        envelope: Envelope,
-        payload: Dict[str, Any]
-    ) -> None:
+    def send_request_no_response(self, url: str, envelope: Envelope, payload: Dict[str, Any]) -> None:
         """Send a request without waiting for meaningful response.
 
         This is used for fire-and-forget messages where we only care

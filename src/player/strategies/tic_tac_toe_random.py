@@ -33,7 +33,7 @@ class TicTacToeRandomStrategy(StrategyInterface):
         Raises:
             ValueError: If no valid moves available
         """
-        board = step_context.get('board', [])
+        board = step_context.get("board", [])
 
         # Find available moves using shared utility
         available_moves = get_available_moves(board)
@@ -45,10 +45,7 @@ class TicTacToeRandomStrategy(StrategyInterface):
 
         logger.debug("Player %s chose random move: %s", self.player_id, move)
 
-        return {
-            'row': move[0],
-            'col': move[1]
-        }
+        return {"row": move[0], "col": move[1]}
 
     def get_strategy_name(self) -> str:
         """Get the name of this strategy.
@@ -64,4 +61,4 @@ class TicTacToeRandomStrategy(StrategyInterface):
         Returns:
             List of game type identifiers
         """
-        return ['tic_tac_toe']
+        return ["tic_tac_toe"]

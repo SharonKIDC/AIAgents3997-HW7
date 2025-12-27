@@ -6,7 +6,7 @@ This module tests the game engine for Tic Tac Toe.
 from src.referee.games.tic_tac_toe import GameOutcome, Mark, TicTacToeGame
 
 
-def create_game(player_x='alice', player_o='bob'):
+def create_game(player_x="alice", player_o="bob"):
     """Helper function to create and initialize a game."""
     game = TicTacToeGame([player_x, player_o])
     game.initialize()
@@ -20,9 +20,9 @@ class TestTicTacToeGame:
         """Test game initialization."""
         game = create_game()
 
-        assert game.player_x == 'alice'
-        assert game.player_o == 'bob'
-        assert game.current_player == 'alice'  # X goes first
+        assert game.player_x == "alice"
+        assert game.player_o == "bob"
+        assert game.current_player == "alice"  # X goes first
         assert game.move_count == 0
         assert not game.is_terminal()
 
@@ -34,7 +34,7 @@ class TestTicTacToeGame:
         assert game.make_move(0, 0)
         assert game.board[0][0] == Mark.X.value
         assert game.move_count == 1
-        assert game.current_player == 'bob'  # Switches to O
+        assert game.current_player == "bob"  # Switches to O
 
     def test_invalid_move_out_of_bounds(self):
         """Test that out of bounds moves are invalid."""
@@ -125,9 +125,15 @@ class TestTicTacToeGame:
         # O X X
         # Correct alternating sequence: X, O, X, O, X, O, X, O, X
         moves = [
-            (0, 0), (0, 1), (0, 2),  # X, O, X - Row 1
-            (1, 1), (1, 0), (1, 2),  # O, X, O - Row 2
-            (2, 1), (2, 0), (2, 2)   # X, O, X - Row 3
+            (0, 0),
+            (0, 1),
+            (0, 2),  # X, O, X - Row 1
+            (1, 1),
+            (1, 0),
+            (1, 2),  # O, X, O - Row 2
+            (2, 1),
+            (2, 0),
+            (2, 2),  # X, O, X - Row 3
         ]
 
         for row, col in moves:
@@ -163,12 +169,12 @@ class TestTicTacToeGame:
 
         state = game.get_state_summary()
 
-        assert 'board' in state
-        assert 'current_player' in state
-        assert 'move_count' in state
-        assert 'outcome' in state
-        assert state['move_count'] == 1
-        assert state['current_player'] == 'bob'
+        assert "board" in state
+        assert "current_player" in state
+        assert "move_count" in state
+        assert "outcome" in state
+        assert state["move_count"] == 1
+        assert state["current_player"] == "bob"
 
     def test_get_step_context(self):
         """Test getting step context for move request."""
@@ -176,11 +182,11 @@ class TestTicTacToeGame:
 
         context = game.get_step_context()
 
-        assert 'board' in context
-        assert 'your_mark' in context
-        assert 'move_number' in context
-        assert context['your_mark'] == Mark.X.value
-        assert context['move_number'] == 1
+        assert "board" in context
+        assert "your_mark" in context
+        assert "move_number" in context
+        assert context["your_mark"] == Mark.X.value
+        assert context["move_number"] == 1
 
     def test_get_available_moves(self):
         """Test getting available moves."""
@@ -209,11 +215,11 @@ class TestTicTacToeGame:
 
         result = game.get_result()
 
-        assert result['outcome']['alice'] == 'win'
-        assert result['outcome']['bob'] == 'loss'
-        assert result['points']['alice'] == 3
-        assert result['points']['bob'] == 0
-        assert result['winner'] == 'alice'
+        assert result["outcome"]["alice"] == "win"
+        assert result["outcome"]["bob"] == "loss"
+        assert result["points"]["alice"] == 3
+        assert result["points"]["bob"] == 0
+        assert result["winner"] == "alice"
 
     def test_get_result_o_wins(self):
         """Test getting result when O wins."""
@@ -229,11 +235,11 @@ class TestTicTacToeGame:
 
         result = game.get_result()
 
-        assert result['outcome']['alice'] == 'loss'
-        assert result['outcome']['bob'] == 'win'
-        assert result['points']['alice'] == 0
-        assert result['points']['bob'] == 3
-        assert result['winner'] == 'bob'
+        assert result["outcome"]["alice"] == "loss"
+        assert result["outcome"]["bob"] == "win"
+        assert result["points"]["alice"] == 0
+        assert result["points"]["bob"] == 3
+        assert result["winner"] == "bob"
 
     def test_get_result_draw(self):
         """Test getting result when game is a draw."""
@@ -241,20 +247,26 @@ class TestTicTacToeGame:
 
         # Create a draw - correct alternating sequence
         moves = [
-            (0, 0), (0, 1), (0, 2),  # X, O, X
-            (1, 1), (1, 0), (1, 2),  # O, X, O
-            (2, 1), (2, 0), (2, 2)   # X, O, X
+            (0, 0),
+            (0, 1),
+            (0, 2),  # X, O, X
+            (1, 1),
+            (1, 0),
+            (1, 2),  # O, X, O
+            (2, 1),
+            (2, 0),
+            (2, 2),  # X, O, X
         ]
         for row, col in moves:
             game.make_move(row, col)
 
         result = game.get_result()
 
-        assert result['outcome']['alice'] == 'draw'
-        assert result['outcome']['bob'] == 'draw'
-        assert result['points']['alice'] == 1
-        assert result['points']['bob'] == 1
-        assert result['winner'] is None
+        assert result["outcome"]["alice"] == "draw"
+        assert result["outcome"]["bob"] == "draw"
+        assert result["points"]["alice"] == 1
+        assert result["points"]["bob"] == 1
+        assert result["winner"] is None
 
     def test_board_deep_copy_in_state(self):
         """Test that state summary returns deep copy of board."""
@@ -262,10 +274,10 @@ class TestTicTacToeGame:
         game.make_move(0, 0)
 
         state = game.get_state_summary()
-        board_copy = state['board']
+        board_copy = state["board"]
 
         # Modify the copy
-        board_copy[0][0] = 'MODIFIED'
+        board_copy[0][0] = "MODIFIED"
 
         # Original should be unchanged
         assert game.board[0][0] == Mark.X.value

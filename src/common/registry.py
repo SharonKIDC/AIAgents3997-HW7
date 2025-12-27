@@ -64,8 +64,7 @@ class Registry:
         cls = self._registry.get(key)
         if cls is None:
             raise ValueError(
-                f"{self.name}: No registration found for '{key}'. "
-                f"Available: {list(self._registry.keys())}"
+                f"{self.name}: No registration found for '{key}'. Available: {list(self._registry.keys())}"
             )
         return cls
 

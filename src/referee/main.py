@@ -25,18 +25,11 @@ def main():
 
     # Setup logging
     logger = setup_application_logging(
-        f"./logs/referee_{args.referee_id}.log",
-        args.log_level,
-        f"referee.{args.referee_id}"
+        f"./logs/referee_{args.referee_id}.log", args.log_level, f"referee.{args.referee_id}"
     )
 
     # Create server
-    server = RefereeServer(
-        args.referee_id,
-        args.host,
-        args.port,
-        args.league_manager_url
-    )
+    server = RefereeServer(args.referee_id, args.host, args.port, args.league_manager_url)
 
     # Run server with standard startup/shutdown logic
     run_agent_server(server, logger, "Referee")

@@ -31,12 +31,7 @@ class RoundRobinScheduler:
         """
         self.database = database
 
-    def generate_schedule(
-        self,
-        league_id: str,
-        player_ids: List[str],
-        game_type: str
-    ) -> Dict[str, Any]:
+    def generate_schedule(self, league_id: str, player_ids: List[str], game_type: str) -> Dict[str, Any]:
         """Generate a complete round-robin schedule.
 
         Args:
@@ -53,11 +48,7 @@ class RoundRobinScheduler:
 
         if n < 2:
             logger.warning("Need at least 2 players for scheduling")
-            return {
-                'rounds': [],
-                'total_matches': 0,
-                'total_rounds': 0
-            }
+            return {"rounds": [], "total_matches": 0, "total_rounds": 0}
 
         # Generate all unique pairs
         all_matches = list(itertools.combinations(sorted_players, 2))
@@ -69,22 +60,13 @@ class RoundRobinScheduler:
         rounds = self._group_into_rounds(sorted_players, all_matches)
 
         # Store rounds and matches in database
-        schedule_info = {
-            'rounds': [],
-            'total_matches': total_matches,
-            'total_rounds': len(rounds)
-        }
+        schedule_info = {"rounds": [], "total_matches": total_matches, "total_rounds": len(rounds)}
 
         for round_number, round_matches in enumerate(rounds, 1):
             round_id = f"round-{uuid.uuid4()}"
 
             # Create round in database
-            self.database.create_round(
-                round_id,
-                league_id,
-                round_number,
-                status='PENDING'
-            )
+            self.database.create_round(round_id, league_id, round_number, status="PENDING")
 
             # Create matches
             match_infos = []
@@ -92,32 +74,17 @@ class RoundRobinScheduler:
                 match_id = f"match-{uuid.uuid4()}"
 
                 self.database.create_match(
-                    match_id,
-                    round_id,
-                    game_type,
-                    players=[player_a, player_b],
-                    status='PENDING'
+                    match_id, round_id, game_type, players=[player_a, player_b], status="PENDING"
                 )
 
-                match_infos.append({
-                    'match_id': match_id,
-                    'players': [player_a, player_b]
-                })
+                match_infos.append({"match_id": match_id, "players": [player_a, player_b]})
 
-            schedule_info['rounds'].append({
-                'round_id': round_id,
-                'round_number': round_number,
-                'matches': match_infos
-            })
+            schedule_info["rounds"].append({"round_id": round_id, "round_number": round_number, "matches": match_infos})
 
         logger.info("Created schedule with %s rounds and %s matches", len(rounds), total_matches)
         return schedule_info
 
-    def _group_into_rounds(
-        self,
-        _players: List[str],
-        matches: List[Tuple[str, str]]
-    ) -> List[List[Tuple[str, str]]]:
+    def _group_into_rounds(self, _players: List[str], matches: List[Tuple[str, str]]) -> List[List[Tuple[str, str]]]:
         """Group matches into rounds where no player appears twice.
 
         This uses a greedy algorithm to create rounds with maximum
@@ -167,8 +134,4 @@ class RoundRobinScheduler:
         """
         # This would query the database for the existing schedule
         # For now, return a placeholder
-        return {
-            'rounds': [],
-            'total_matches': 0,
-            'total_rounds': 0
-        }
+        return {"rounds": [], "total_matches": 0, "total_rounds": 0}

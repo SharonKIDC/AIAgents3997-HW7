@@ -11,12 +11,12 @@ from .tic_tac_toe import TicTacToeGame
 game_registry = GameRegistry()
 
 # Register available games
-game_registry.register_game('tic_tac_toe', TicTacToeGame)
+game_registry.register_game("tic_tac_toe", TicTacToeGame)
 
 # Export for convenient importing
 __all__ = [
-    'game_registry',
-    'TicTacToeGame',
+    "game_registry",
+    "TicTacToeGame",
 ]
 
 

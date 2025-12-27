@@ -12,18 +12,18 @@ from .tic_tac_toe_smart import TicTacToeSmartStrategy
 strategy_registry = StrategyRegistry()
 
 # Register available strategies
-strategy_registry.register_strategy('smart', TicTacToeSmartStrategy)
-strategy_registry.register_strategy('random', TicTacToeRandomStrategy)
+strategy_registry.register_strategy("smart", TicTacToeSmartStrategy)
+strategy_registry.register_strategy("random", TicTacToeRandomStrategy)
 
 # Also register with full game-specific names for clarity
-strategy_registry.register_strategy('tic_tac_toe_smart', TicTacToeSmartStrategy)
-strategy_registry.register_strategy('tic_tac_toe_random', TicTacToeRandomStrategy)
+strategy_registry.register_strategy("tic_tac_toe_smart", TicTacToeSmartStrategy)
+strategy_registry.register_strategy("tic_tac_toe_random", TicTacToeRandomStrategy)
 
 # Export for convenient importing
 __all__ = [
-    'strategy_registry',
-    'TicTacToeSmartStrategy',
-    'TicTacToeRandomStrategy',
+    "strategy_registry",
+    "TicTacToeSmartStrategy",
+    "TicTacToeRandomStrategy",
 ]
 
 

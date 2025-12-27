@@ -13,6 +13,7 @@ from ...common.game_interface import GameInterface
 
 class Mark(str, Enum):
     """Board marks."""
+
     X = "X"
     O = "O"
     EMPTY = ""
@@ -20,6 +21,7 @@ class Mark(str, Enum):
 
 class GameOutcome(str, Enum):
     """Game outcomes."""
+
     X_WINS = "X_WINS"
     O_WINS = "O_WINS"
     DRAW = "DRAW"
@@ -65,7 +67,7 @@ class TicTacToeGame(GameInterface):
         Returns:
             Game type string
         """
-        return 'tic_tac_toe'
+        return "tic_tac_toe"
 
     def get_current_mark(self) -> str:
         """Get mark for current player."""
@@ -80,8 +82,8 @@ class TicTacToeGame(GameInterface):
         Returns:
             True if move is valid, False otherwise
         """
-        row = move_payload.get('row')
-        col = move_payload.get('col')
+        row = move_payload.get("row")
+        col = move_payload.get("col")
 
         if row is None or col is None:
             return False
@@ -109,17 +111,15 @@ class TicTacToeGame(GameInterface):
         if not self.validate_move(move_payload):
             raise ValueError(f"Invalid move: {move_payload}")
 
-        row = move_payload['row']
-        col = move_payload['col']
+        row = move_payload["row"]
+        col = move_payload["col"]
 
         mark = self.get_current_mark()
         self.board[row][col] = mark
         self.move_count += 1
 
         # Switch player
-        self.current_player = (
-            self.player_o if self.current_player == self.player_x else self.player_x
-        )
+        self.current_player = self.player_o if self.current_player == self.player_x else self.player_x
 
         return True
 
@@ -133,7 +133,7 @@ class TicTacToeGame(GameInterface):
         Returns:
             True if move is valid
         """
-        return self.validate_move({'row': row, 'col': col})
+        return self.validate_move({"row": row, "col": col})
 
     def make_move(self, row: int, col: int) -> bool:
         """Make a move on the board (legacy method for backward compatibility).
@@ -146,7 +146,7 @@ class TicTacToeGame(GameInterface):
             True if move was successful
         """
         try:
-            return self.apply_move({'row': row, 'col': col})
+            return self.apply_move({"row": row, "col": col})
         except ValueError:
             return False
 
@@ -163,17 +163,17 @@ class TicTacToeGame(GameInterface):
 
         # Check columns
         for col in range(3):
-            if (self.board[0][col] != Mark.EMPTY.value and
-                self.board[0][col] == self.board[1][col] == self.board[2][col]):
+            if (
+                self.board[0][col] != Mark.EMPTY.value
+                and self.board[0][col] == self.board[1][col] == self.board[2][col]
+            ):
                 return self.board[0][col]
 
         # Check diagonals
-        if (self.board[0][0] != Mark.EMPTY.value and
-            self.board[0][0] == self.board[1][1] == self.board[2][2]):
+        if self.board[0][0] != Mark.EMPTY.value and self.board[0][0] == self.board[1][1] == self.board[2][2]:
             return self.board[0][0]
 
-        if (self.board[0][2] != Mark.EMPTY.value and
-            self.board[0][2] == self.board[1][1] == self.board[2][0]):
+        if self.board[0][2] != Mark.EMPTY.value and self.board[0][2] == self.board[1][1] == self.board[2][0]:
             return self.board[0][2]
 
         return None
@@ -212,10 +212,10 @@ class TicTacToeGame(GameInterface):
             Dictionary with game state
         """
         return {
-            'board': copy.deepcopy(self.board),
-            'current_player': self.current_player,
-            'move_count': self.move_count,
-            'outcome': self.get_outcome().value
+            "board": copy.deepcopy(self.board),
+            "current_player": self.current_player,
+            "move_count": self.move_count,
+            "outcome": self.get_outcome().value,
         }
 
     def get_step_context(self) -> Dict[str, Any]:
@@ -225,9 +225,9 @@ class TicTacToeGame(GameInterface):
             Step context for player
         """
         return {
-            'board': copy.deepcopy(self.board),
-            'your_mark': self.get_current_mark(),
-            'move_number': self.move_count + 1
+            "board": copy.deepcopy(self.board),
+            "your_mark": self.get_current_mark(),
+            "move_number": self.move_count + 1,
         }
 
     def get_available_moves(self) -> List[Tuple[int, int]]:
@@ -253,39 +253,21 @@ class TicTacToeGame(GameInterface):
 
         if outcome == GameOutcome.X_WINS:
             return {
-                'outcome': {
-                    self.player_x: 'win',
-                    self.player_o: 'loss'
-                },
-                'points': {
-                    self.player_x: 3,
-                    self.player_o: 0
-                },
-                'winner': self.player_x
+                "outcome": {self.player_x: "win", self.player_o: "loss"},
+                "points": {self.player_x: 3, self.player_o: 0},
+                "winner": self.player_x,
             }
         if outcome == GameOutcome.O_WINS:
             return {
-                'outcome': {
-                    self.player_x: 'loss',
-                    self.player_o: 'win'
-                },
-                'points': {
-                    self.player_x: 0,
-                    self.player_o: 3
-                },
-                'winner': self.player_o
+                "outcome": {self.player_x: "loss", self.player_o: "win"},
+                "points": {self.player_x: 0, self.player_o: 3},
+                "winner": self.player_o,
             }
         # Draw
         return {
-            'outcome': {
-                self.player_x: 'draw',
-                self.player_o: 'draw'
-            },
-            'points': {
-                self.player_x: 1,
-                self.player_o: 1
-            },
-            'winner': None
+            "outcome": {self.player_x: "draw", self.player_o: "draw"},
+            "points": {self.player_x: 1, self.player_o: 1},
+            "winner": None,
         }
 
     def get_metadata(self) -> Dict[str, Any]:
@@ -294,7 +276,4 @@ class TicTacToeGame(GameInterface):
         Returns:
             Dictionary with game-specific metadata
         """
-        return {
-            'final_state': self.get_state_summary(),
-            'total_moves': self.move_count
-        }
+        return {"final_state": self.get_state_summary(), "total_moves": self.move_count}

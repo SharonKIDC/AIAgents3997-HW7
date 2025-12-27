@@ -41,13 +41,7 @@ class LeagueManagerServer:
     """Main League Manager server coordinating all league operations."""
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        *,
-        config: ConfigManager,
-        database: LeagueDatabase,
-        audit_logger: AuditLogger
+        self, host: str, port: int, *, config: ConfigManager, database: LeagueDatabase, audit_logger: AuditLogger
     ):
         """Initialize the League Manager server.
 
@@ -67,27 +61,16 @@ class LeagueManagerServer:
         # Initialize components
         self.auth_manager = AuthManager()
         self.league_state = LeagueState(
-            config.league.league_id if config.league else "default-league",
-            database,
-            config
+            config.league.league_id if config.league else "default-league", database, config
         )
-        self.registration_handler = RegistrationHandler(
-            self.league_state,
-            database,
-            self.auth_manager
-        )
+        self.registration_handler = RegistrationHandler(self.league_state, database, self.auth_manager)
         self.scheduler = RoundRobinScheduler(database)
         self.http_client = LeagueHTTPClient()
         self.match_assigner = MatchAssigner(database, self.http_client)
         self.standings_engine = StandingsEngine(database)
 
         # Initialize HTTP server
-        self.http_server = LeagueHTTPServer(
-            host,
-            port,
-            self._handle_request,
-            self._get_status
-        )
+        self.http_server = LeagueHTTPServer(host, port, self._handle_request, self._get_status)
 
         # Message handlers
         self._handlers: Dict[MessageType, Callable] = {
@@ -127,15 +110,11 @@ class LeagueManagerServer:
         """
         try:
             # Extract and validate envelope
-            envelope = Envelope.from_dict(request.params['envelope'])
-            payload = request.params.get('payload', {})
+            envelope = Envelope.from_dict(request.params["envelope"])
+            payload = request.params.get("payload", {})
 
             # Log request
-            self.audit_logger.log_request(
-                request,
-                envelope.sender,
-                "league_manager"
-            )
+            self.audit_logger.log_request(request, envelope.sender, "league_manager")
 
             # Validate authentication (except for registration and admin requests)
             message_type = MessageType(envelope.message_type)
@@ -165,23 +144,14 @@ class LeagueManagerServer:
                 sender="league_manager",
                 timestamp=utc_now(),
                 conversation_id=envelope.conversation_id,
-                league_id=self.league_state.league_id
+                league_id=self.league_state.league_id,
             )
 
             # Create response
-            response = create_success_response(
-                response_envelope,
-                response_payload,
-                request.id
-            )
+            response = create_success_response(response_envelope, response_payload, request.id)
 
             # Log response
-            self.audit_logger.log_response(
-                response,
-                "league_manager",
-                envelope.sender,
-                envelope.conversation_id
-            )
+            self.audit_logger.log_response(response, "league_manager", envelope.sender, envelope.conversation_id)
 
             return response
 
@@ -194,37 +164,25 @@ class LeagueManagerServer:
         except Exception as e:  # pylint: disable=broad-exception-caught
             return create_internal_error_response(e, request.id)
 
-    def _handle_register_referee(
-        self,
-        envelope: Envelope,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_register_referee(self, envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle referee registration request."""
-        referee_id = payload.get('referee_id')
+        referee_id = payload.get("referee_id")
         if not referee_id:
             raise ValidationError("Missing referee_id", field="referee_id")
 
-        endpoint_url = payload.get('endpoint_url')
+        endpoint_url = payload.get("endpoint_url")
         return self.registration_handler.register_referee(referee_id, envelope, endpoint_url)
 
-    def _handle_register_player(
-        self,
-        envelope: Envelope,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_register_player(self, envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle player registration request."""
-        player_id = payload.get('player_id')
+        player_id = payload.get("player_id")
         if not player_id:
             raise ValidationError("Missing player_id", field="player_id")
 
-        endpoint_url = payload.get('endpoint_url')
+        endpoint_url = payload.get("endpoint_url")
         return self.registration_handler.register_player(player_id, envelope, endpoint_url)
 
-    def _handle_match_result(
-        self,
-        envelope: Envelope,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_match_result(self, envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle match result report."""
         match_id = envelope.match_id
         if not match_id:
@@ -238,35 +196,24 @@ class LeagueManagerServer:
         # Check for duplicate result
         existing_result = self.database.get_result(match_id)
         if existing_result:
-            raise ValidationError(
-                f"Result already reported for match {match_id}",
-                field="match_id"
-            )
+            raise ValidationError(f"Result already reported for match {match_id}", field="match_id")
 
         # Extract result data
-        outcome = payload.get('outcome', {})
-        points = payload.get('points', {})
-        game_metadata = payload.get('game_metadata')
+        outcome = payload.get("outcome", {})
+        points = payload.get("points", {})
+        game_metadata = payload.get("game_metadata")
 
         # Store result
         result_id = f"result-{uuid.uuid4()}"
         self.database.store_result(
-            result_id,
-            match_id,
-            outcome=outcome,
-            points=points,
-            game_metadata=game_metadata,
-            reported_at=utc_now()
+            result_id, match_id, outcome=outcome, points=points, game_metadata=game_metadata, reported_at=utc_now()
         )
 
         # Update match status
-        self.database.update_match_status(match_id, 'COMPLETED')
+        self.database.update_match_status(match_id, "COMPLETED")
 
         # Recompute standings
-        self.standings_engine.publish_standings(
-            self.league_state.league_id,
-            envelope.round_id
-        )
+        self.standings_engine.publish_standings(self.league_state.league_id, envelope.round_id)
 
         logger.info("Match result recorded: %s", match_id)
 
@@ -275,10 +222,10 @@ class LeagueManagerServer:
         if not pending_matches:
             # Check if any matches are still in progress
             all_matches = self.database.conn.execute(
-                '''SELECT COUNT(*) FROM matches m
+                """SELECT COUNT(*) FROM matches m
                    JOIN rounds r ON m.round_id = r.round_id
-                   WHERE r.league_id = ? AND m.status != 'COMPLETED' ''',
-                (self.league_state.league_id,)
+                   WHERE r.league_id = ? AND m.status != 'COMPLETED' """,
+                (self.league_state.league_id,),
             ).fetchone()[0]
 
             if all_matches == 0:
@@ -286,38 +233,20 @@ class LeagueManagerServer:
                 self.league_state.transition_to(LeagueStatus.COMPLETED)
                 logger.info("All matches complete. League status: COMPLETED")
 
-        return {
-            'status': 'acknowledged',
-            'match_id': match_id
-        }
+        return {"status": "acknowledged", "match_id": match_id}
 
-    def _handle_query_standings(
-        self,
-        _envelope: Envelope,
-        payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_query_standings(self, _envelope: Envelope, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle standings query."""
-        round_id = payload.get('round_id')
+        round_id = payload.get("round_id")
 
-        standings = self.standings_engine.get_standings(
-            self.league_state.league_id,
-            round_id
-        )
+        standings = self.standings_engine.get_standings(self.league_state.league_id, round_id)
 
         if standings:
             return standings
         # Return empty standings if none computed yet
-        return {
-            'round_id': round_id,
-            'updated_at': utc_now(),
-            'standings': []
-        }
+        return {"round_id": round_id, "updated_at": utc_now(), "standings": []}
 
-    def _handle_agent_ready(
-        self,
-        envelope: Envelope,
-        _payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_agent_ready(self, envelope: Envelope, _payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle agent ready notification.
 
         Agents send this after registration and initialization to signal
@@ -325,51 +254,36 @@ class LeagueManagerServer:
         """
         # Parse sender to determine agent type and ID
         sender = envelope.sender
-        if ':' not in sender:
-            raise ValidationError(
-                f"Invalid sender format for ready signal: {sender}",
-                field="sender"
-            )
+        if ":" not in sender:
+            raise ValidationError(f"Invalid sender format for ready signal: {sender}", field="sender")
 
-        agent_type, agent_id = sender.split(':', 1)
+        agent_type, agent_id = sender.split(":", 1)
 
         # Verify agent is registered
-        if agent_type == 'referee':
+        if agent_type == "referee":
             agent = self.database.get_referee(agent_id)
             if not agent:
                 raise ValidationError(f"Unknown referee: {agent_id}", field="sender")
 
             # Update status to ACTIVE
-            self.database.update_referee_status(agent_id, 'ACTIVE')
+            self.database.update_referee_status(agent_id, "ACTIVE")
             logger.info("Referee %s is now ACTIVE", agent_id)
 
-        elif agent_type == 'player':
+        elif agent_type == "player":
             agent = self.database.get_player(agent_id)
             if not agent:
                 raise ValidationError(f"Unknown player: {agent_id}", field="sender")
 
             # Update status to ACTIVE
-            self.database.update_player_status(agent_id, 'ACTIVE')
+            self.database.update_player_status(agent_id, "ACTIVE")
             logger.info("Player %s is now ACTIVE", agent_id)
 
         else:
-            raise ValidationError(
-                f"Invalid agent type for ready signal: {agent_type}",
-                field="sender"
-            )
+            raise ValidationError(f"Invalid agent type for ready signal: {agent_type}", field="sender")
 
-        return {
-            'status': 'acknowledged',
-            'agent_id': agent_id,
-            'agent_type': agent_type,
-            'agent_state': 'ACTIVE'
-        }
+        return {"status": "acknowledged", "agent_id": agent_id, "agent_type": agent_type, "agent_state": "ACTIVE"}
 
-    def _handle_admin_start_league(
-        self,
-        _envelope: Envelope,
-        _payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_admin_start_league(self, _envelope: Envelope, _payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle admin request to start the league.
 
         This closes registration, generates schedule, and transitions to ACTIVE.
@@ -378,32 +292,28 @@ class LeagueManagerServer:
 
         if success:
             return {
-                'status': 'started',
-                'league_status': self.league_state.status.value,
-                'message': 'League started successfully'
+                "status": "started",
+                "league_status": self.league_state.status.value,
+                "message": "League started successfully",
             }
         raise ValidationError(
             "Cannot start league: minimum requirements not met",
             details={
-                'referees': self.league_state.get_referee_count(),
-                'players': self.league_state.get_player_count(),
-                'min_referees': 1,
-                'min_players': 2
-            }
+                "referees": self.league_state.get_referee_count(),
+                "players": self.league_state.get_player_count(),
+                "min_referees": 1,
+                "min_players": 2,
+            },
         )
 
-    def _handle_admin_get_status(
-        self,
-        _envelope: Envelope,
-        _payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _handle_admin_get_status(self, _envelope: Envelope, _payload: Dict[str, Any]) -> Dict[str, Any]:
         """Handle admin request to get detailed league status."""
         return {
-            'league_id': self.league_state.league_id,
-            'status': self.league_state.status.value,
-            'referees': self.league_state.get_referee_count(),
-            'players': self.league_state.get_player_count(),
-            'can_start': self.league_state.can_close_registration()
+            "league_id": self.league_state.league_id,
+            "status": self.league_state.status.value,
+            "referees": self.league_state.get_referee_count(),
+            "players": self.league_state.get_player_count(),
+            "can_start": self.league_state.can_close_registration(),
         }
 
     def _get_response_type(self, request_type: MessageType) -> str:
@@ -422,10 +332,10 @@ class LeagueManagerServer:
     def _get_status(self) -> Dict[str, Any]:
         """Get server status for health endpoint."""
         return {
-            'status': self.league_state.status.value,
-            'league_id': self.league_state.league_id,
-            'referees': self.league_state.get_referee_count(),
-            'players': self.league_state.get_player_count()
+            "status": self.league_state.status.value,
+            "league_id": self.league_state.league_id,
+            "referees": self.league_state.get_referee_count(),
+            "players": self.league_state.get_player_count(),
         }
 
     def close_registration_and_schedule(self):
@@ -440,17 +350,13 @@ class LeagueManagerServer:
 
         # Get all players
         players = self.league_state.get_active_players()
-        player_ids = [p['player_id'] for p in players]
+        player_ids = [p["player_id"] for p in players]
 
         # Generate schedule
         game_type = "tic_tac_toe"  # Default game type
-        schedule = self.scheduler.generate_schedule(
-            self.league_state.league_id,
-            player_ids,
-            game_type
-        )
+        schedule = self.scheduler.generate_schedule(self.league_state.league_id, player_ids, game_type)
 
-        logger.info("Generated schedule: %s rounds, %s matches", schedule['total_rounds'], schedule['total_matches'])
+        logger.info("Generated schedule: %s rounds, %s matches", schedule["total_rounds"], schedule["total_matches"])
 
         # NOTE: Agents must send AGENT_READY_REQUEST to transition from REGISTERED to ACTIVE
         # This ensures only operational agents participate in matches
@@ -466,7 +372,7 @@ class LeagueManagerServer:
 
         while waited < max_wait_seconds:
             referees = self.database.get_all_referees(self.league_state.league_id)
-            active_referees = [r for r in referees if r['status'] == 'ACTIVE']
+            active_referees = [r for r in referees if r["status"] == "ACTIVE"]
 
             if len(active_referees) > 0:
                 logger.info("Found %s active referee(s). Proceeding with match assignment.", len(active_referees))

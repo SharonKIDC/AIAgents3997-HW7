@@ -22,7 +22,7 @@ def temp_db():
         LeagueDatabase: Database instance with temporary file
     """
     # Create temporary file
-    fd, path = tempfile.mkstemp(suffix='.db')
+    fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
 
     # Create database
@@ -120,12 +120,7 @@ def registered_league(temp_db, sample_league_id, auth_manager):
     from src.common.protocol import utc_now
 
     # Create league
-    temp_db.create_league(
-        sample_league_id,
-        'REGISTRATION',
-        utc_now(),
-        {'name': 'Test League', 'min_players': 2}
-    )
+    temp_db.create_league(sample_league_id, "REGISTRATION", utc_now(), {"name": "Test League", "min_players": 2})
 
     # Register referees
     referee_ids = ["ref-1", "ref-2"]
@@ -144,13 +139,13 @@ def registered_league(temp_db, sample_league_id, auth_manager):
         player_tokens[player_id] = token
 
     return {
-        'db': temp_db,
-        'league_id': sample_league_id,
-        'auth_manager': auth_manager,
-        'referee_ids': referee_ids,
-        'player_ids': player_ids,
-        'referee_tokens': referee_tokens,
-        'player_tokens': player_tokens
+        "db": temp_db,
+        "league_id": sample_league_id,
+        "auth_manager": auth_manager,
+        "referee_ids": referee_ids,
+        "player_ids": player_ids,
+        "referee_tokens": referee_tokens,
+        "player_tokens": player_tokens,
     }
 
 
@@ -164,11 +159,11 @@ def sample_envelope_data():
     from src.common.protocol import generate_conversation_id, utc_now
 
     return {
-        'protocol': 'league.v2',
-        'message_type': 'REGISTER_PLAYER_REQUEST',
-        'sender': 'player:alice',
-        'timestamp': utc_now(),
-        'conversation_id': generate_conversation_id()
+        "protocol": "league.v2",
+        "message_type": "REGISTER_PLAYER_REQUEST",
+        "sender": "player:alice",
+        "timestamp": utc_now(),
+        "conversation_id": generate_conversation_id(),
     }
 
 
@@ -182,19 +177,17 @@ def sample_jsonrpc_request():
     from src.common.protocol import generate_conversation_id, generate_message_id, utc_now
 
     return {
-        'jsonrpc': '2.0',
-        'method': 'league.handle',
-        'params': {
-            'envelope': {
-                'protocol': 'league.v2',
-                'message_type': 'REGISTER_PLAYER_REQUEST',
-                'sender': 'player:alice',
-                'timestamp': utc_now(),
-                'conversation_id': generate_conversation_id()
+        "jsonrpc": "2.0",
+        "method": "league.handle",
+        "params": {
+            "envelope": {
+                "protocol": "league.v2",
+                "message_type": "REGISTER_PLAYER_REQUEST",
+                "sender": "player:alice",
+                "timestamp": utc_now(),
+                "conversation_id": generate_conversation_id(),
             },
-            'payload': {
-                'player_id': 'alice'
-            }
+            "payload": {"player_id": "alice"},
         },
-        'id': generate_message_id()
+        "id": generate_message_id(),
     }

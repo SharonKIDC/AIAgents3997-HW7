@@ -15,6 +15,7 @@ from .errors import ConfigurationError
 @dataclass
 class LeagueConfig:
     """League configuration settings."""
+
     league_id: str
     name: str
     registration_window_seconds: int
@@ -26,6 +27,7 @@ class LeagueConfig:
 @dataclass
 class SchedulingConfig:
     """Scheduling configuration settings."""
+
     algorithm: str
     concurrent_matches_per_round: bool
 
@@ -33,6 +35,7 @@ class SchedulingConfig:
 @dataclass
 class TimeoutConfig:
     """Timeout configuration settings."""
+
     registration_response_ms: int
     match_join_ack_ms: int
     move_response_ms: int
@@ -42,6 +45,7 @@ class TimeoutConfig:
 @dataclass
 class RetryConfig:
     """Retry configuration settings."""
+
     max_attempts: int
     backoff_ms: int
 
@@ -49,6 +53,7 @@ class RetryConfig:
 @dataclass
 class LoggingConfig:
     """Logging configuration settings."""
+
     audit_log_path: str
     application_log_path: str
     log_level: str
@@ -57,12 +62,14 @@ class LoggingConfig:
 @dataclass
 class DatabaseConfig:
     """Database configuration settings."""
+
     path: str
 
 
 @dataclass
 class GameConfig:
     """Game type configuration."""
+
     game_type: str
     name: str
     description: str
@@ -104,73 +111,61 @@ class ConfigManager:
         """
         config_path = self.config_dir / filename
         if not config_path.exists():
-            raise ConfigurationError(
-                f"Configuration file not found: {config_path}",
-                path=str(config_path)
-            )
+            raise ConfigurationError(f"Configuration file not found: {config_path}", path=str(config_path))
 
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
             # Parse league settings
-            league_data = data.get('league', {})
+            league_data = data.get("league", {})
             self.league = LeagueConfig(
-                league_id=league_data.get('league_id', 'default-league'),
-                name=league_data.get('name', 'Agent League'),
-                registration_window_seconds=data.get('registration', {}).get('window_seconds', 60),
-                min_players=data.get('registration', {}).get('min_players', 2),
-                max_players=data.get('registration', {}).get('max_players', 100),
-                min_referees=data.get('registration', {}).get('min_referees', 1)
+                league_id=league_data.get("league_id", "default-league"),
+                name=league_data.get("name", "Agent League"),
+                registration_window_seconds=data.get("registration", {}).get("window_seconds", 60),
+                min_players=data.get("registration", {}).get("min_players", 2),
+                max_players=data.get("registration", {}).get("max_players", 100),
+                min_referees=data.get("registration", {}).get("min_referees", 1),
             )
 
             # Parse scheduling settings
-            scheduling_data = data.get('scheduling', {})
+            scheduling_data = data.get("scheduling", {})
             self.scheduling = SchedulingConfig(
-                algorithm=scheduling_data.get('algorithm', 'round_robin'),
-                concurrent_matches_per_round=scheduling_data.get('concurrent_matches_per_round', True)
+                algorithm=scheduling_data.get("algorithm", "round_robin"),
+                concurrent_matches_per_round=scheduling_data.get("concurrent_matches_per_round", True),
             )
 
             # Parse timeout settings
-            timeout_data = data.get('timeouts', {})
+            timeout_data = data.get("timeouts", {})
             self.timeouts = TimeoutConfig(
-                registration_response_ms=timeout_data.get('registration_response_ms', 5000),
-                match_join_ack_ms=timeout_data.get('match_join_ack_ms', 10000),
-                move_response_ms=timeout_data.get('move_response_ms', 30000),
-                result_report_ms=timeout_data.get('result_report_ms', 60000)
+                registration_response_ms=timeout_data.get("registration_response_ms", 5000),
+                match_join_ack_ms=timeout_data.get("match_join_ack_ms", 10000),
+                move_response_ms=timeout_data.get("move_response_ms", 30000),
+                result_report_ms=timeout_data.get("result_report_ms", 60000),
             )
 
             # Parse retry settings
-            retry_data = data.get('retries', {})
+            retry_data = data.get("retries", {})
             self.retries = RetryConfig(
-                max_attempts=retry_data.get('max_attempts', 3),
-                backoff_ms=retry_data.get('backoff_ms', 1000)
+                max_attempts=retry_data.get("max_attempts", 3), backoff_ms=retry_data.get("backoff_ms", 1000)
             )
 
             # Parse logging settings
-            logging_data = data.get('logging', {})
+            logging_data = data.get("logging", {})
             self.logging = LoggingConfig(
-                audit_log_path=logging_data.get('audit_log_path', './logs/audit.jsonl'),
-                application_log_path=logging_data.get('application_log_path', './logs/league_manager.log'),
-                log_level=logging_data.get('log_level', 'INFO')
+                audit_log_path=logging_data.get("audit_log_path", "./logs/audit.jsonl"),
+                application_log_path=logging_data.get("application_log_path", "./logs/league_manager.log"),
+                log_level=logging_data.get("log_level", "INFO"),
             )
 
             # Parse database settings
-            db_data = data.get('database', {})
-            self.database = DatabaseConfig(
-                path=db_data.get('path', './data/league.db')
-            )
+            db_data = data.get("database", {})
+            self.database = DatabaseConfig(path=db_data.get("path", "./data/league.db"))
 
         except yaml.YAMLError as e:
-            raise ConfigurationError(
-                f"Invalid YAML in configuration: {str(e)}",
-                path=str(config_path)
-            ) from e
+            raise ConfigurationError(f"Invalid YAML in configuration: {str(e)}", path=str(config_path)) from e
         except Exception as e:
-            raise ConfigurationError(
-                f"Error loading configuration: {str(e)}",
-                path=str(config_path)
-            ) from e
+            raise ConfigurationError(f"Error loading configuration: {str(e)}", path=str(config_path)) from e
 
     def load_game_registry(self, filename: str = "game_registry.yaml"):
         """Load game registry configuration.
@@ -190,31 +185,28 @@ class ConfigManager:
                     name="Tic Tac Toe",
                     description="Classic 3x3 grid game",
                     referee_implementation="src.referee.games.tic_tac_toe.TicTacToeReferee",
-                    scoring={"win": 3, "draw": 1, "loss": 0}
+                    scoring={"win": 3, "draw": 1, "loss": 0},
                 )
             }
             return
 
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
 
-            games_data = data.get('games', [])
+            games_data = data.get("games", [])
             for game_data in games_data:
                 game = GameConfig(
-                    game_type=game_data['game_type'],
-                    name=game_data['name'],
-                    description=game_data.get('description', ''),
-                    referee_implementation=game_data['referee_implementation'],
-                    scoring=game_data.get('scoring', {"win": 3, "draw": 1, "loss": 0})
+                    game_type=game_data["game_type"],
+                    name=game_data["name"],
+                    description=game_data.get("description", ""),
+                    referee_implementation=game_data["referee_implementation"],
+                    scoring=game_data.get("scoring", {"win": 3, "draw": 1, "loss": 0}),
                 )
                 self.games[game.game_type] = game
 
         except Exception as e:
-            raise ConfigurationError(
-                f"Error loading game registry: {str(e)}",
-                path=str(config_path)
-            ) from e
+            raise ConfigurationError(f"Error loading game registry: {str(e)}", path=str(config_path)) from e
 
     def get_game_config(self, game_type: str) -> Optional[GameConfig]:
         """Get configuration for a specific game type.

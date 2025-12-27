@@ -13,6 +13,7 @@ from .errors import AuthenticationError, AuthorizationError
 
 class AgentType(str, Enum):
     """Types of agents in the league."""
+
     LEAGUE_MANAGER = "league_manager"
     REFEREE = "referee"
     PLAYER = "player"
@@ -46,10 +47,7 @@ class AuthManager:
             token = str(uuid.uuid4())
 
             # Store mappings
-            self._tokens[token] = {
-                'agent_id': agent_id,
-                'agent_type': agent_type.value
-            }
+            self._tokens[token] = {"agent_id": agent_id, "agent_type": agent_type.value}
             self._agent_tokens[agent_id] = token
 
             return token
@@ -83,8 +81,8 @@ class AuthManager:
             AuthorizationError: If sender doesn't match token
         """
         agent_info = self.validate_token(token)
-        agent_id = agent_info['agent_id']
-        agent_type = agent_info['agent_type']
+        agent_id = agent_info["agent_id"]
+        agent_type = agent_info["agent_type"]
 
         # Construct expected sender
         if agent_type == AgentType.LEAGUE_MANAGER:
@@ -94,9 +92,7 @@ class AuthManager:
 
         if sender != expected_sender:
             raise AuthorizationError(
-                f"Sender mismatch: expected {expected_sender}, got {sender}",
-                expected=expected_sender,
-                actual=sender
+                f"Sender mismatch: expected {expected_sender}, got {sender}", expected=expected_sender, actual=sender
             )
 
     def invalidate_token(self, token: str) -> None:
@@ -107,7 +103,7 @@ class AuthManager:
         """
         with self._lock:
             if token in self._tokens:
-                agent_id = self._tokens[token]['agent_id']
+                agent_id = self._tokens[token]["agent_id"]
                 del self._tokens[token]
                 if agent_id in self._agent_tokens:
                     del self._agent_tokens[agent_id]
@@ -137,7 +133,7 @@ class AuthManager:
         Raises:
             AuthenticationError: If token is invalid
         """
-        return self.validate_token(token)['agent_id']
+        return self.validate_token(token)["agent_id"]
 
     def get_agent_type(self, token: str) -> str:
         """Get agent type for a token.
@@ -151,7 +147,7 @@ class AuthManager:
         Raises:
             AuthenticationError: If token is invalid
         """
-        return self.validate_token(token)['agent_type']
+        return self.validate_token(token)["agent_type"]
 
     def has_token(self, agent_id: str) -> bool:
         """Check if an agent has a token.

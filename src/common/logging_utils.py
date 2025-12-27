@@ -37,7 +37,7 @@ class AuditLogger:
         with self._lock:
             if self._file is None:
                 # pylint: disable=consider-using-with
-                self._file = open(self.log_path, 'a', encoding='utf-8')
+                self._file = open(self.log_path, "a", encoding="utf-8")
 
     def close(self):
         """Close the audit log file."""
@@ -46,12 +46,7 @@ class AuditLogger:
                 self._file.close()
                 self._file = None
 
-    def log_request(
-        self,
-        request: JSONRPCRequest,
-        source: str,
-        destination: str
-    ) -> None:
+    def log_request(self, request: JSONRPCRequest, source: str, destination: str) -> None:
         """Log a JSON-RPC request.
 
         Args:
@@ -59,24 +54,20 @@ class AuditLogger:
             source: Source agent identity
             destination: Destination agent identity
         """
-        envelope = request.params.get('envelope', {})
+        envelope = request.params.get("envelope", {})
         log_entry = {
-            'log_id': str(uuid.uuid4()),
-            'timestamp': datetime.utcnow().isoformat() + 'Z',
-            'direction': 'request',
-            'source': source,
-            'destination': destination,
-            'conversation_id': envelope.get('conversation_id', 'unknown'),
-            'message': request.to_dict()
+            "log_id": str(uuid.uuid4()),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "direction": "request",
+            "source": source,
+            "destination": destination,
+            "conversation_id": envelope.get("conversation_id", "unknown"),
+            "message": request.to_dict(),
         }
         self._write_entry(log_entry)
 
     def log_response(
-        self,
-        response: JSONRPCResponse,
-        source: str,
-        destination: str,
-        conversation_id: Optional[str] = None
+        self, response: JSONRPCResponse, source: str, destination: str, conversation_id: Optional[str] = None
     ) -> None:
         """Log a JSON-RPC response.
 
@@ -88,17 +79,17 @@ class AuditLogger:
         """
         # Try to extract conversation_id from response
         if conversation_id is None and response.result:
-            envelope = response.result.get('envelope', {})
-            conversation_id = envelope.get('conversation_id', 'unknown')
+            envelope = response.result.get("envelope", {})
+            conversation_id = envelope.get("conversation_id", "unknown")
 
         log_entry = {
-            'log_id': str(uuid.uuid4()),
-            'timestamp': datetime.utcnow().isoformat() + 'Z',
-            'direction': 'response',
-            'source': source,
-            'destination': destination,
-            'conversation_id': conversation_id or 'unknown',
-            'message': response.to_dict()
+            "log_id": str(uuid.uuid4()),
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "direction": "response",
+            "source": source,
+            "destination": destination,
+            "conversation_id": conversation_id or "unknown",
+            "message": response.to_dict(),
         }
         self._write_entry(log_entry)
 
@@ -111,8 +102,8 @@ class AuditLogger:
         with self._lock:
             if self._file is None:
                 self.open()
-            line = json.dumps(entry, separators=(',', ':'))
-            self._file.write(line + '\n')
+            line = json.dumps(entry, separators=(",", ":"))
+            self._file.write(line + "\n")
             self._file.flush()
 
     def __enter__(self):
@@ -126,9 +117,7 @@ class AuditLogger:
 
 
 def setup_application_logging(
-    log_path: str,
-    log_level: str = 'INFO',
-    logger_name: Optional[str] = None
+    log_path: str, log_level: str = "INFO", logger_name: Optional[str] = None
 ) -> logging.Logger:
     """Set up application logging.
 
@@ -153,17 +142,14 @@ def setup_application_logging(
     # File handler with structured format
     file_handler = logging.FileHandler(log_path)
     file_formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%SZ'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%dT%H:%M:%SZ"
     )
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
     # Console handler
     console_handler = logging.StreamHandler()
-    console_formatter = logging.Formatter(
-        '%(levelname)s: %(message)s'
-    )
+    console_formatter = logging.Formatter("%(levelname)s: %(message)s")
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 

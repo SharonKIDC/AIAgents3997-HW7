@@ -17,11 +17,7 @@ logger = logging.getLogger(__name__)
 class MatchAssigner:
     """Assigns matches to available referees."""
 
-    def __init__(
-        self,
-        database: LeagueDatabase,
-        http_client: LeagueHTTPClient
-    ):
+    def __init__(self, database: LeagueDatabase, http_client: LeagueHTTPClient):
         """Initialize the match assigner.
 
         Args:
@@ -32,10 +28,7 @@ class MatchAssigner:
         self.http_client = http_client
         self._referee_availability = {}  # referee_id -> is_idle
 
-    def assign_pending_matches(
-        self,
-        league_id: str
-    ) -> List[Dict[str, Any]]:
+    def assign_pending_matches(self, league_id: str) -> List[Dict[str, Any]]:
         """Assign all pending matches to available referees.
 
         Args:
@@ -52,7 +45,7 @@ class MatchAssigner:
 
         # Get active referees
         referees = self.database.get_all_referees(league_id)
-        active_referees = [r for r in referees if r['status'] == 'ACTIVE']
+        active_referees = [r for r in referees if r["status"] == "ACTIVE"]
 
         if not active_referees:
             logger.warning("No active referees available for match assignment")
@@ -64,33 +57,22 @@ class MatchAssigner:
         for match in pending_matches:
             # Find next available referee (round-robin with wraparound)
             referee = active_referees[referee_idx % len(active_referees)]
-            referee_id = referee['referee_id']
+            referee_id = referee["referee_id"]
 
             # Assign match
             try:
-                assignment_info = self.assign_match(
-                    match['match_id'],
-                    referee_id,
-                    match['game_type'],
-                    match['players']
-                )
+                assignment_info = self.assign_match(match["match_id"], referee_id, match["game_type"], match["players"])
                 assignments.append(assignment_info)
                 referee_idx += 1
             except OperationalError as e:
-                logger.error("Failed to assign match %s to referee %s: %s", match['match_id'], referee_id, e)
+                logger.error("Failed to assign match %s to referee %s: %s", match["match_id"], referee_id, e)
             except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Unexpected error assigning match %s to referee %s", match['match_id'], referee_id)
+                logger.exception("Unexpected error assigning match %s to referee %s", match["match_id"], referee_id)
 
         logger.info("Assigned %s matches to referees", len(assignments))
         return assignments
 
-    def assign_match(
-        self,
-        match_id: str,
-        referee_id: str,
-        game_type: str,
-        players: List[str]
-    ) -> Dict[str, Any]:
+    def assign_match(self, match_id: str, referee_id: str, game_type: str, players: List[str]) -> Dict[str, Any]:
         """Assign a specific match to a referee.
 
         Args:
@@ -111,20 +93,16 @@ class MatchAssigner:
         # Get match details
         match = self.database.get_match(match_id)
         if not match:
-            raise OperationalError(
-                ErrorCode.INVALID_MATCH_ID,
-                f"Match not found: {match_id}"
-            )
+            raise OperationalError(ErrorCode.INVALID_MATCH_ID, f"Match not found: {match_id}")
 
         # Send assignment to referee
         referee = self.database.get_referee(referee_id)
-        if not referee or not referee.get('endpoint_url'):
+        if not referee or not referee.get("endpoint_url"):
             raise OperationalError(
-                ErrorCode.INVALID_REFEREE_ID,
-                f"Referee {referee_id} not found or has no endpoint URL"
+                ErrorCode.INVALID_REFEREE_ID, f"Referee {referee_id} not found or has no endpoint URL"
             )
 
-        referee_url = referee['endpoint_url']
+        referee_url = referee["endpoint_url"]
 
         # Create MATCH_ASSIGNMENT envelope
         envelope = Envelope(
@@ -134,25 +112,25 @@ class MatchAssigner:
             timestamp=utc_now(),
             conversation_id=generate_conversation_id(),
             match_id=match_id,
-            round_id=match['round_id'],
-            game_type=game_type
+            round_id=match["round_id"],
+            game_type=game_type,
         )
 
         # Get player endpoint URLs
         player_endpoints = {}
         for player_id in players:
             player = self.database.get_player(player_id)
-            if player and player.get('endpoint_url'):
-                player_endpoints[player_id] = player['endpoint_url']
+            if player and player.get("endpoint_url"):
+                player_endpoints[player_id] = player["endpoint_url"]
             else:
                 logger.warning("Player %s has no endpoint URL", player_id)
 
         payload = {
-            'match_id': match_id,
-            'round_id': match['round_id'],
-            'game_type': game_type,
-            'players': players,
-            'player_endpoints': player_endpoints
+            "match_id": match_id,
+            "round_id": match["round_id"],
+            "game_type": game_type,
+            "players": players,
+            "player_endpoints": player_endpoints,
         }
 
         # Send to referee
@@ -162,17 +140,16 @@ class MatchAssigner:
         except Exception as e:
             logger.error("Failed to send match assignment to referee %s: %s", referee_id, e)
             raise OperationalError(
-                ErrorCode.COMMUNICATION_ERROR,
-                f"Failed to send assignment to referee: {str(e)}"
+                ErrorCode.COMMUNICATION_ERROR, f"Failed to send assignment to referee: {str(e)}"
             ) from e
 
         return {
-            'match_id': match_id,
-            'referee_id': referee_id,
-            'round_id': match['round_id'],
-            'game_type': game_type,
-            'players': players,
-            'assigned_at': match.get('assigned_at', utc_now())
+            "match_id": match_id,
+            "referee_id": referee_id,
+            "round_id": match["round_id"],
+            "game_type": game_type,
+            "players": players,
+            "assigned_at": match.get("assigned_at", utc_now()),
         }
 
     def mark_referee_busy(self, referee_id: str):

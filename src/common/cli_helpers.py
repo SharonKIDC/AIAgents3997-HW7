@@ -16,17 +16,8 @@ def add_host_port_args(parser: argparse.ArgumentParser, default_port: int):
         parser: ArgumentParser instance
         default_port: Default port number
     """
-    parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Host to bind to (default: localhost)"
-    )
-    parser.add_argument(
-        "--port",
-        type=int,
-        default=default_port,
-        help=f"Port to bind to (default: {default_port})"
-    )
+    parser.add_argument("--host", default="localhost", help="Host to bind to (default: localhost)")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Port to bind to (default: {default_port})")
 
 
 def add_league_manager_url_arg(parser: argparse.ArgumentParser):
@@ -38,7 +29,7 @@ def add_league_manager_url_arg(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--league-manager-url",
         default="http://localhost:8000/mcp",
-        help="League Manager URL (default: http://localhost:8000/mcp)"
+        help="League Manager URL (default: http://localhost:8000/mcp)",
     )
 
 
@@ -52,7 +43,7 @@ def add_log_level_arg(parser: argparse.ArgumentParser):
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level (default: INFO)"
+        help="Logging level (default: INFO)",
     )
 
 
@@ -67,10 +58,7 @@ def create_agent_parser(description: str, agent_type: str) -> argparse.ArgumentP
         Configured ArgumentParser
     """
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument(
-        f"{agent_type}_id",
-        help=f"Unique {agent_type} identifier"
-    )
+    parser.add_argument(f"{agent_type}_id", help=f"Unique {agent_type} identifier")
     return parser
 
 
@@ -116,8 +104,4 @@ def run_agent_server(server, logger, error_message: str):
         logger.error("%s: Failed to send ready signal to League Manager", error_message)
         sys.exit(1)
 
-    run_server_loop(
-        logger,
-        f"{error_message} is running and ACTIVE",
-        server.stop
-    )
+    run_server_loop(logger, f"{error_message} is running and ACTIVE", server.stop)

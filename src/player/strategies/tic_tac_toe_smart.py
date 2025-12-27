@@ -35,8 +35,8 @@ class TicTacToeSmartStrategy(StrategyInterface):
         Raises:
             ValueError: If no valid moves available
         """
-        board = step_context.get('board', [])
-        my_mark = step_context.get('your_mark')
+        board = step_context.get("board", [])
+        my_mark = step_context.get("your_mark")
 
         logger.debug("Computing move for %s (mark: %s)", self.player_id, my_mark)
 
@@ -48,17 +48,14 @@ class TicTacToeSmartStrategy(StrategyInterface):
 
         # Simple strategy: check for winning move, blocking move, or random
         move = (
-            self._find_winning_move(board, my_mark) or
-            self._find_blocking_move(board, my_mark) or
-            random.choice(available_moves)
+            self._find_winning_move(board, my_mark)
+            or self._find_blocking_move(board, my_mark)
+            or random.choice(available_moves)
         )
 
         logger.info("Player %s chose move: %s", self.player_id, move)
 
-        return {
-            'row': move[0],
-            'col': move[1]
-        }
+        return {"row": move[0], "col": move[1]}
 
     def get_strategy_name(self) -> str:
         """Get the name of this strategy.
@@ -74,13 +71,9 @@ class TicTacToeSmartStrategy(StrategyInterface):
         Returns:
             List of game type identifiers
         """
-        return ['tic_tac_toe']
+        return ["tic_tac_toe"]
 
-    def _find_winning_move(
-        self,
-        board: list,
-        my_mark: str
-    ) -> Optional[Tuple[int, int]]:
+    def _find_winning_move(self, board: list, my_mark: str) -> Optional[Tuple[int, int]]:
         """Find a move that wins the game.
 
         Args:
@@ -98,11 +91,7 @@ class TicTacToeSmartStrategy(StrategyInterface):
                         return (row, col)
         return None
 
-    def _find_blocking_move(
-        self,
-        board: list,
-        my_mark: str
-    ) -> Optional[Tuple[int, int]]:
+    def _find_blocking_move(self, board: list, my_mark: str) -> Optional[Tuple[int, int]]:
         """Find a move that blocks opponent from winning.
 
         Args:

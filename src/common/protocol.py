@@ -85,7 +85,7 @@ class Envelope:
         return {k: v for k, v in asdict(self).items() if v is not None}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Envelope':
+    def from_dict(cls, data: Dict[str, Any]) -> "Envelope":
         """Create envelope from dictionary with validation.
 
         Args:
@@ -98,40 +98,37 @@ class Envelope:
             ValidationError: If required fields are missing or invalid
         """
         # Validate required fields
-        required = ['protocol', 'message_type', 'sender', 'timestamp', 'conversation_id']
+        required = ["protocol", "message_type", "sender", "timestamp", "conversation_id"]
         for field_name in required:
             if field_name not in data:
-                raise ValidationError(
-                    f"Missing required envelope field: {field_name}",
-                    field=field_name
-                )
+                raise ValidationError(f"Missing required envelope field: {field_name}", field=field_name)
 
         # Validate protocol version
-        if data['protocol'] != PROTOCOL_VERSION:
+        if data["protocol"] != PROTOCOL_VERSION:
             raise ProtocolError(
                 ErrorCode.INVALID_PROTOCOL_VERSION,
                 f"Invalid protocol version: {data['protocol']}",
-                {"expected": PROTOCOL_VERSION, "actual": data['protocol']}
+                {"expected": PROTOCOL_VERSION, "actual": data["protocol"]},
             )
 
         # Validate message type
         try:
-            MessageType(data['message_type'])
+            MessageType(data["message_type"])
         except ValueError as exc:
             raise ProtocolError(
                 ErrorCode.INVALID_MESSAGE_TYPE,
                 f"Unknown message type: {data['message_type']}",
-                {"message_type": data['message_type']}
+                {"message_type": data["message_type"]},
             ) from exc
 
         # Validate sender format
-        validate_sender_format(data['sender'])
+        validate_sender_format(data["sender"])
 
         # Validate timestamp format
-        validate_timestamp(data['timestamp'])
+        validate_timestamp(data["timestamp"])
 
         # Validate conversation_id format
-        validate_uuid(data['conversation_id'], 'conversation_id')
+        validate_uuid(data["conversation_id"], "conversation_id")
 
         field_names = {field.name for field in fields(cls)}
         return cls(**{k: v for k, v in data.items() if k in field_names})
@@ -155,12 +152,12 @@ def validate_sender_format(sender: str) -> None:
     if sender in ["league_manager", "admin"]:
         return
 
-    pattern = r'^(referee|player):[a-zA-Z0-9_-]+$'
+    pattern = r"^(referee|player):[a-zA-Z0-9_-]+$"
     if not re.match(pattern, sender):
         raise ValidationError(
             f"Invalid sender format: {sender}",
             field="sender",
-            expected_format="league_manager|admin|referee:<id>|player:<id>"
+            expected_format="league_manager|admin|referee:<id>|player:<id>",
         )
 
 
@@ -174,19 +171,12 @@ def validate_timestamp(timestamp: str) -> None:
         ValidationError: If timestamp is invalid or not UTC
     """
     try:
-        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+        dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
         # Ensure it's UTC
         if dt.utcoffset().total_seconds() != 0:
-            raise ValidationError(
-                f"Timestamp must be UTC: {timestamp}",
-                field="timestamp"
-            )
+            raise ValidationError(f"Timestamp must be UTC: {timestamp}", field="timestamp")
     except (ValueError, AttributeError) as e:
-        raise ValidationError(
-            f"Invalid timestamp format: {timestamp}",
-            field="timestamp",
-            error=str(e)
-        ) from e
+        raise ValidationError(f"Invalid timestamp format: {timestamp}", field="timestamp", error=str(e)) from e
 
 
 def validate_uuid(value: str, field_name: str) -> None:
@@ -202,10 +192,7 @@ def validate_uuid(value: str, field_name: str) -> None:
     try:
         uuid.UUID(value)
     except ValueError as exc:
-        raise ValidationError(
-            f"Invalid UUID format for {field_name}: {value}",
-            field=field_name
-        ) from exc
+        raise ValidationError(f"Invalid UUID format for {field_name}: {value}", field=field_name) from exc
 
 
 @dataclass
@@ -222,7 +209,7 @@ class JSONRPCRequest:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'JSONRPCRequest':
+    def from_dict(cls, data: Dict[str, Any]) -> "JSONRPCRequest":
         """Create request from dictionary with validation.
 
         Args:
@@ -235,41 +222,28 @@ class JSONRPCRequest:
             ProtocolError: If validation fails
         """
         # Validate JSON-RPC version
-        if data.get('jsonrpc') != JSONRPC_VERSION:
+        if data.get("jsonrpc") != JSONRPC_VERSION:
             raise ProtocolError(
                 ErrorCode.INVALID_JSON_RPC,
                 f"Invalid JSON-RPC version: {data.get('jsonrpc')}",
-                {"expected": JSONRPC_VERSION}
+                {"expected": JSONRPC_VERSION},
             )
 
         # Validate method
-        if data.get('method') != MCP_METHOD:
+        if data.get("method") != MCP_METHOD:
             raise ProtocolError(
-                ErrorCode.INVALID_METHOD,
-                f"Invalid method: {data.get('method')}",
-                {"expected": MCP_METHOD}
+                ErrorCode.INVALID_METHOD, f"Invalid method: {data.get('method')}", {"expected": MCP_METHOD}
             )
 
         # Validate params structure
-        if 'params' not in data or not isinstance(data['params'], dict):
-            raise ProtocolError(
-                ErrorCode.MISSING_REQUIRED_FIELD,
-                "Missing or invalid 'params' field"
-            )
+        if "params" not in data or not isinstance(data["params"], dict):
+            raise ProtocolError(ErrorCode.MISSING_REQUIRED_FIELD, "Missing or invalid 'params' field")
 
         # Validate envelope exists
-        if 'envelope' not in data['params']:
-            raise ProtocolError(
-                ErrorCode.MISSING_ENVELOPE,
-                "Missing 'envelope' in params"
-            )
+        if "envelope" not in data["params"]:
+            raise ProtocolError(ErrorCode.MISSING_ENVELOPE, "Missing 'envelope' in params")
 
-        return cls(
-            jsonrpc=data['jsonrpc'],
-            method=data['method'],
-            params=data['params'],
-            id=data.get('id', '')
-        )
+        return cls(jsonrpc=data["jsonrpc"], method=data["method"], params=data["params"], id=data.get("id", ""))
 
 
 @dataclass
@@ -293,11 +267,7 @@ class JSONRPCResponse:
         return response
 
 
-def create_success_response(
-    envelope: Envelope,
-    payload: Dict[str, Any],
-    request_id: str
-) -> JSONRPCResponse:
+def create_success_response(envelope: Envelope, payload: Dict[str, Any], request_id: str) -> JSONRPCResponse:
     """Create a success JSON-RPC response.
 
     Args:
@@ -309,20 +279,12 @@ def create_success_response(
         JSONRPCResponse with result
     """
     return JSONRPCResponse(
-        jsonrpc=JSONRPC_VERSION,
-        result={
-            "envelope": envelope.to_dict(),
-            "payload": payload
-        },
-        id=request_id
+        jsonrpc=JSONRPC_VERSION, result={"envelope": envelope.to_dict(), "payload": payload}, id=request_id
     )
 
 
 def create_error_response(
-    error_code: int,
-    error_message: str,
-    error_data: Optional[Dict[str, Any]] = None,
-    request_id: Optional[str] = None
+    error_code: int, error_message: str, error_data: Optional[Dict[str, Any]] = None, request_id: Optional[str] = None
 ) -> JSONRPCResponse:
     """Create an error JSON-RPC response.
 
@@ -337,12 +299,8 @@ def create_error_response(
     """
     return JSONRPCResponse(
         jsonrpc=JSONRPC_VERSION,
-        error={
-            "code": error_code,
-            "message": error_message,
-            "data": error_data or {}
-        },
-        id=request_id
+        error={"code": error_code, "message": error_message, "data": error_data or {}},
+        id=request_id,
     )
 
 
@@ -370,4 +328,4 @@ def utc_now() -> str:
     Returns:
         ISO-8601 timestamp string with Z suffix
     """
-    return datetime.utcnow().isoformat() + 'Z'
+    return datetime.utcnow().isoformat() + "Z"

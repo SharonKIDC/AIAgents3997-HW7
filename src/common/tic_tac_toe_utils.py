@@ -53,7 +53,7 @@ def would_win(board: List[List[str]], row: int, col: int, mark: str) -> bool:
         return True
 
     # Check anti-diagonal
-    if row + col == 2 and all(temp_board[i][2-i] == mark for i in range(3)):
+    if row + col == 2 and all(temp_board[i][2 - i] == mark for i in range(3)):
         return True
 
     return False

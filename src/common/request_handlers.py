@@ -28,12 +28,7 @@ def create_league_error_response(error: LeagueError, request_id: str) -> JSONRPC
         JSON-RPC error response
     """
     logger.warning("League error: %s", error)
-    return create_error_response(
-        int(error.code),
-        error.message,
-        error.details,
-        request_id
-    )
+    return create_error_response(int(error.code), error.message, error.details, request_id)
 
 
 def create_validation_error_response(error: Exception, request_id: str) -> JSONRPCResponse:
@@ -48,9 +43,7 @@ def create_validation_error_response(error: Exception, request_id: str) -> JSONR
     """
     logger.error("Invalid request data: %s", error)
     return create_error_response(
-        ErrorCode.INVALID_MESSAGE_TYPE,
-        f"Invalid request: {str(error)}",
-        request_id=request_id
+        ErrorCode.INVALID_MESSAGE_TYPE, f"Invalid request: {str(error)}", request_id=request_id
     )
 
 
@@ -65,16 +58,11 @@ def create_internal_error_response(error: Exception, request_id: str) -> JSONRPC
         JSON-RPC error response
     """
     logger.exception("Unexpected error handling request")
-    return create_error_response(
-        ErrorCode.INTERNAL_ERROR,
-        f"Internal error: {str(error)}",
-        request_id=request_id
-    )
+    return create_error_response(ErrorCode.INTERNAL_ERROR, f"Internal error: {str(error)}", request_id=request_id)
 
 
 def handle_request_errors(
-    request: JSONRPCRequest,
-    handler: Callable[[JSONRPCRequest], JSONRPCResponse]
+    request: JSONRPCRequest, handler: Callable[[JSONRPCRequest], JSONRPCResponse]
 ) -> JSONRPCResponse:
     """Wrap request handler with standard error handling.
 

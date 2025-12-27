@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class LeagueStatus(str, Enum):
     """League lifecycle states."""
+
     INIT = "INIT"
     REGISTRATION = "REGISTRATION"
     SCHEDULING = "SCHEDULING"
@@ -26,6 +27,7 @@ class LeagueStatus(str, Enum):
 
 class AgentStatus(str, Enum):
     """Agent lifecycle states."""
+
     REGISTERED = "REGISTERED"
     ACTIVE = "ACTIVE"
     SUSPENDED = "SUSPENDED"
@@ -35,12 +37,7 @@ class AgentStatus(str, Enum):
 class LeagueState:
     """Manages league state and lifecycle transitions."""
 
-    def __init__(
-        self,
-        league_id: str,
-        database: LeagueDatabase,
-        config: ConfigManager
-    ):
+    def __init__(self, league_id: str, database: LeagueDatabase, config: ConfigManager):
         """Initialize league state manager.
 
         Args:
@@ -58,22 +55,17 @@ class LeagueState:
         # Check if league already exists
         existing = self.database.get_league(self.league_id)
         if existing:
-            self._status = LeagueStatus(existing['status'])
+            self._status = LeagueStatus(existing["status"])
             logger.info("Loaded existing league %s with status %s", self.league_id, self._status)
         else:
             # Create new league
             config_data = {
-                'league_id': self.league_id,
-                'name': self.config.league.name if self.config.league else 'Agent League',
-                'min_players': self.config.league.min_players if self.config.league else 2,
-                'max_players': self.config.league.max_players if self.config.league else 100
+                "league_id": self.league_id,
+                "name": self.config.league.name if self.config.league else "Agent League",
+                "min_players": self.config.league.min_players if self.config.league else 2,
+                "max_players": self.config.league.max_players if self.config.league else 100,
             }
-            self.database.create_league(
-                self.league_id,
-                LeagueStatus.REGISTRATION.value,
-                utc_now(),
-                config_data
-            )
+            self.database.create_league(self.league_id, LeagueStatus.REGISTRATION.value, utc_now(), config_data)
             self._status = LeagueStatus.REGISTRATION
             logger.info("Created new league %s", self.league_id)
 
@@ -92,7 +84,7 @@ class LeagueState:
             LeagueStatus.REGISTRATION: [LeagueStatus.SCHEDULING],
             LeagueStatus.SCHEDULING: [LeagueStatus.ACTIVE],
             LeagueStatus.ACTIVE: [LeagueStatus.COMPLETED],
-            LeagueStatus.COMPLETED: []
+            LeagueStatus.COMPLETED: [],
         }
 
         if new_status not in valid_transitions.get(self._status, []):
@@ -126,22 +118,22 @@ class LeagueState:
     def get_referee_count(self) -> int:
         """Get count of registered referees."""
         referees = self.database.get_all_referees(self.league_id)
-        return len([r for r in referees if r['status'] in ['REGISTERED', 'ACTIVE']])
+        return len([r for r in referees if r["status"] in ["REGISTERED", "ACTIVE"]])
 
     def get_player_count(self) -> int:
         """Get count of registered players."""
         players = self.database.get_all_players(self.league_id)
-        return len([p for p in players if p['status'] in ['REGISTERED', 'ACTIVE']])
+        return len([p for p in players if p["status"] in ["REGISTERED", "ACTIVE"]])
 
     def get_active_referees(self) -> list:
         """Get list of active referees."""
         referees = self.database.get_all_referees(self.league_id)
-        return [r for r in referees if r['status'] == 'ACTIVE']
+        return [r for r in referees if r["status"] == "ACTIVE"]
 
     def get_active_players(self) -> list:
         """Get list of active players."""
         players = self.database.get_all_players(self.league_id)
-        return [p for p in players if p['status'] in ['REGISTERED', 'ACTIVE']]
+        return [p for p in players if p["status"] in ["REGISTERED", "ACTIVE"]]
 
     def can_close_registration(self) -> bool:
         """Check if registration can be closed.
@@ -155,10 +147,7 @@ class LeagueState:
         referee_count = self.get_referee_count()
         player_count = self.get_player_count()
 
-        return (
-            referee_count >= self.config.league.min_referees and
-            player_count >= self.config.league.min_players
-        )
+        return referee_count >= self.config.league.min_referees and player_count >= self.config.league.min_players
 
     def to_dict(self) -> Dict[str, Any]:
         """Get league state as dictionary.
@@ -167,8 +156,8 @@ class LeagueState:
             Dictionary representation of league state
         """
         return {
-            'league_id': self.league_id,
-            'status': self._status.value,
-            'referee_count': self.get_referee_count(),
-            'player_count': self.get_player_count()
+            "league_id": self.league_id,
+            "status": self._status.value,
+            "referee_count": self.get_referee_count(),
+            "player_count": self.get_player_count(),
         }
